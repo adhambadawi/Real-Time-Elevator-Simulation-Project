@@ -60,6 +60,11 @@ public class ElevatorCall {
         this.owner = owner;
     }
 
+    /**
+     * Attempt to merge an incoming request with this request
+     * @param request the incoming request
+     * @return true if request was merged, false otherwise
+     */
     public boolean mergeRequest(ElevatorCall request) {
         if (!canMerge(request)) {
             return false;
