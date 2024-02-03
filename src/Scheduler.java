@@ -50,10 +50,10 @@ public class Scheduler {
      *
      * @param SubFloorSubsystemNode: SubFloorSubsystem node to be added
      */
-    public void registerSubFloorSubsystemNode(Thread subFloorSubsystemNode){
+    public void registerSubFloorSubsystemNode(Runnable subFloorSubsystemNode){
 
         //ensure the node getting registered is of type SubFloorSubsystemNode
-        if (subFloorSubsystemNode instanceof SubFloorSubsystem){
+        if (subFloorSubsystemNode instanceof FloorSubsystem){
             subFloorSubsystemNodes.add(subFloorSubsystemNode);
         }
         else{
@@ -84,7 +84,7 @@ public class Scheduler {
      */
     public synchronized void notifySchedulerElevatorDetected(Integer floorNumber, int elevatorSubsystemCarID){
         //Notify the floors to reflect the new location that elevator car is approaching and going away
-        notifySubFloorSubSystemNodesElevatorDetected(floorNumber);
+        notifyFloorSubSystemNodesElevatorDetected(floorNumber);
 
         //Notify the elevator to reflect its location on the screen and if the elevator is supposed to stop on that floor reached then makes the motor stop moving,
         // the floor light turn off, and the doors open.
@@ -119,7 +119,7 @@ public class Scheduler {
      * 
      * @param floorNumber: The floor number where the elevator car was detected
      */
-    private void notifySubFloorSubSystemNodesElevatorDetected(int floorNumber){
+    private void notifyFloorSubSystemNodesElevatorDetected(int floorNumber){
         for (Thread floor : subFloorSubsystemNodes){
             floor.notifyWithTheDetectedElevatorPosition(floorNumber);
         }
@@ -154,21 +154,42 @@ public class Scheduler {
     }
 
 
+    public void analyzeRequests(){
+
+        //arrange the requests by time first then by direction
+        requests.sort(Comparator.comparing(Request::getTime).thenComparing(Request::getDirection));
+
+        //group the requests based on the floor elevator call, time proximity, and direction
+        List<List<Request>> groupedRequests = new ArrayList<>();
+        for (Request request : requests){
+            boolean added = false;
+            for (List<Request> group: groupedRequests){
+                Request lastRequest = group.get(group.size() - 1);
+                if(request.getFloor() == lastRequest.getFloor() &&
+                    request.getDirection().equals(lastRequest.getDirection()) &&
+                    Math.abs(request.getTime().toSecondOfDay() - lastRequest.time.toSecondOfDay()) <= 300) {
+                        group.add(request);
+                        added = true;
+                        break;
+                }
+            }
+            if (! added){
+                List<Request> newGroup = new ArrayList<>();
+                newGroup.add(request);
+                groupedRequests.add(newGroup);
+            }
+        }
+
+        //ProcessRequest
+        processRequest();
+    }
+        
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    public void processRequest(){
+        Request firstRequest = requests.get(0);
+        
+    }
 
 
 
