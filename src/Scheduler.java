@@ -17,7 +17,8 @@ public class Scheduler {
 
     private List<Runnable>  FloorSubsystemNodes; //Represents the list of subFloorSubsystem threads.
     private List<Runnable>  elevatorSubsystemNodes; //Represents the list of elevatorSubsystem threads.
-    private List<ElevatorCall> elevatorCalls; // list of the elevator requests
+    private List<ElevatorCall> requestQueue; // queue of pending elevator calls
+    private List<ElevatorCall> activeTrips; // active elevator trips indexed by elevator id
 
     //Singleton object 
      private static Scheduler scheduler;
@@ -26,7 +27,8 @@ public class Scheduler {
     private Scheduler() {
         FloorSubsystemNodes = new ArrayList<>();
         elevatorSubsystemNodes = new ArrayList<>();
-        elevatorCalls = new ArrayList<>();
+        requestQueue = new ArrayList<>();
+        activeTrips = new ArrayList<>();
     }
 
     /** Creates and returns Scheduler object upon check singularity.
@@ -43,13 +45,13 @@ public class Scheduler {
 
     public void addRequest(ElevatorCall elevatorCall){
         //try to adding the coming request to an existing request
-        for (ElevatorCall elevatorCallIterator: elevatorCalls){
+        for (ElevatorCall elevatorCallIterator: activeTrips) {
             if (elevatorCallIterator.mergeRequest(elevatorCall)){
                 return;
             }
         }
         //If no current request satisfy the coming request then append at the end of the requests list
-        elevatorCalls.add(elevatorCall);
+        requestQueue.add(elevatorCall);
     }
 
     /** Used to register SubFloorSubsystem nodes (floors) to the SubFloorSubsystemNodes arraylist
@@ -98,6 +100,7 @@ public class Scheduler {
         //Notify the elevator to reflect its location on the screen and if the elevator is supposed to stop on that floor reached then makes the motor stop moving,
         // the floor light turn off, and the doors open.
         ElevatorSubsystem elevatorCarDetected = getElevatorCarWithTheGivenID(elevatorSubsystemCarID);
+
         // notifyElevatorWithFloorDetected(floorNumber, elevatorCarDetected);
     }
 
@@ -140,74 +143,28 @@ public class Scheduler {
         }
     }
 
-    public void analyzeRequests(){
+    public synchronized ElevatorCall getNextTrip(ElevatorSubsystem caller) {
+        if (caller.getCurrentTrip() != null) {
+            activeTrips.remove(caller.getCurrentTrip());
+        }
 
-        if (elevatorCalls.size() == 0){
+        if (requestQueue.size() == 0) {
             System.out.println("There is no current elevator requests to process");
-            return;
+            return null;
         }
-        ElevatorCall nextRequest = elevatorCalls.remove(0);
-        nextRequest.setOwner(elevatorSubsystemNodes.get(0)); //Since there is only one elevator car
-        //Get the highest floor where the elevator is expected to go while processing the going up requests
 
-        if (nextRequest.getDirection().equals("Up")){
-                
+        ElevatorCall nextRequest = requestQueue.remove(0);
+        nextRequest.setOwner(caller);
 
-                // int highestFloor = nextRequest.getHighestTargetedFloor();
-                // //Find the lowest floor expected to stop at among all the requests
-                // int startingFloor = nextRequest.getStartingFloor();
-
-            processRequestsGoingUp(highestFloor, nextRequest);
-        }
-    }
-
-    private void processRequestsGoingUp(int highestFloor, ElevatorCall request) {
-        // Process requests going up
-        //Assume the elevator starts at floor 1 for this iteration
-        for (int currentFloor = 1; currentFloor <= highestFloor; currentFloor++) {
-             currentFloorRequests = filterRequests(currentFloor, "UP");
-
-            if (!currentFloorRequests.isEmpty()) {
-                System.out.println("Elevator going UP, current floor: " + currentFloor);
-
-                // Process requests going UP from the current floor
-                processRequests(currentFloorRequests);
-
-                // Remove processed requests
-                requests.removeAll(currentFloorRequests);
+        for (ElevatorCall request : requestQueue) {
+            if (nextRequest.mergeRequest(request)) {
+                requestQueue.remove(request);
             }
         }
-    }
 
-    // private void processRequestsGoingDown(int lowestFloor) {
-    //     // Process requests going down
-    //     for (int currentFloor = highestFloor; currentFloor >= lowestFloor; currentFloor--) {
-    //         List<Request> currentFloorRequests = filterRequests(currentFloor, "DOWN");
+        activeTrips.add(nextRequest);
 
-    //         if (!currentFloorRequests.isEmpty()) {
-    //             System.out.println("Elevator going DOWN, current floor: " + currentFloor);
-
-    //             // Process requests going DOWN from the current floor
-    //             processRequests(currentFloorRequests);
-
-    //             // Remove processed requests
-    //             requests.removeAll(currentFloorRequests);
-    //         }
-    //     }
-    // }
-
-
-
-    
-    private elevatorCalls filterRequests(int currentFloor, String direction) {
-
-    }
-
-    private void processRequests(List<Request> currentFloorRequests) {
-        // Process the requests from the current floor
-        for (Request request : currentFloorRequests) {
-            System.out.println("Elevator serving request: " + request);
-        }
+        return nextRequest;
     }
 }
 

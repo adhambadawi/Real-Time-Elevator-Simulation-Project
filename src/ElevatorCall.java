@@ -45,8 +45,12 @@ public class ElevatorCall {
         return startingFloor;
     }
 
-    public int getNextFloor() {
+    public synchronized Integer getNextFloor() {
         return targetFloors.get(0);
+    }
+
+    public synchronized void arrivedAtFloor() {
+        targetFloors.remove(0);
     }
 
     public String getDirection() {
@@ -61,16 +65,12 @@ public class ElevatorCall {
         this.owner = owner;
     }
 
-    public int getHighestTargetedFloor() {
-        return targetFloors.get(targetFloors.size() - 1);
-    }
-
     /**
      * Attempt to merge an incoming request with this request
      * @param request the incoming request
      * @return true if request was merged, false otherwise
      */
-    public boolean mergeRequest(ElevatorCall request) {
+    public synchronized boolean mergeRequest(ElevatorCall request) {
         if (!canMerge(request)) {
             return false;
         }
