@@ -1,5 +1,7 @@
 import java.io.*;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Class reposnisple for simulating arrival of passengers to the elevator
@@ -10,6 +12,7 @@ import java.util.Date;
 public class FloorSubsystem implements Runnable {
     private Scheduler scheduler;
     private String inputFilepath;
+    private Map<Integer, Integer> elevatorCarDisplay; // Used to store the current floors of each elevator for future display
 
     /**
      * Constructor for FloorSubsystem thread
@@ -19,6 +22,7 @@ public class FloorSubsystem implements Runnable {
     public FloorSubsystem(Scheduler scheduler, String inputFilepath) {
         this.scheduler = scheduler;
         this.inputFilepath = inputFilepath;
+        elevatorCarDisplay = new HashMap<Integer, Integer>();
     }
 
     /**
@@ -60,5 +64,9 @@ public class FloorSubsystem implements Runnable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void updateElevatorCarDisplay(int elevatorId, int currFloor) {
+        elevatorCarDisplay.put(elevatorId, currFloor);
     }
 }
