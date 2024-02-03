@@ -1,3 +1,4 @@
+import java.time.LocalTime;
 import java.util.*;
 
 /**
@@ -14,15 +15,18 @@ import java.util.*;
 
 public class Scheduler {
 
-    private List<Thread>  subFloorSubsystemNodes = new ArrayList<>(); //Represents the list of subFloorSubsystem threads.
-    private List<Thread>  elevatorSubsystemNodes = new ArrayList<>(); //Represents the list of elevatorSubsystem threads.
-    private List<ArrivalSensor> arrivalSensors = new ArrayList<>(); //Represent the list of the arrival sensors.
+    private List<Runnable>  subFloorSubsystemNodes; //Represents the list of subFloorSubsystem threads.
+    private List<Runnable>  elevatorSubsystemNodes; //Represents the list of elevatorSubsystem threads.
+    private List<Request> requests; // list of the elevator requests
 
     //Singleton object 
      private static Scheduler scheduler;
     
 
     private Scheduler() {
+        subFloorSubsystemNodes = new ArrayList<>();
+        elevatorSubsystemNodes = new ArrayList<>();
+        requests = new ArrayList<>();
     }
 
     /** Creates and returns Scheduler object upon check singularity.
@@ -35,6 +39,10 @@ public class Scheduler {
             }
         }
         return scheduler;
+    }
+
+    public void addRequest(Request request){
+        requests.add(request);
     }
 
     /** Used to register SubFloorSubsystem nodes (floors) to the SubFloorSubsystemNodes arraylist
@@ -69,13 +77,71 @@ public class Scheduler {
         }
     }
 
+    /** Used to notify the Schedular that an elevator cas was detected.
+     * Note: This method should only be used by an arrival sensor.
+     *
+     * @param floorNumber: The floor number where the elevator car was detected
+     */
+    public synchronized void notifySchedulerElevatorDetected(Integer floorNumber, int elevatorSubsystemCarID){
+        //Notify the floors to reflect the new location that elevator car is approaching and going away
+        notifySubFloorSubSystemNodesElevatorDetected(floorNumber);
+
+        //Notify the elevator to reflect its location on the screen and if the elevator is supposed to stop on that floor reached then makes the motor stop moving,
+        // the floor light turn off, and the doors open.
+        ElevatorSubsystem elevatorCarDetected = getElevatorCarWithTheGivenID(elevatorSubsystemCarID);
+        notifyElevatorWithFloorDetected(floorNumber, elevatorCarDetected);
+    }
+
+    /**
+    * Get the elevator car with ID provided
+    * @param elevatorSubsystemCarID: the elevator car ID
+    * @return ElevatorSubsystem elevatorCar: the elevator car with id given.
+    */
+    private ElevatorSubsystem getElevatorCarWithTheGivenID(int elevatorSubsystemCarID){
+
+        ElevatorSubsystem targetedElevatorCar = null;
+
+        for (Runnable elevatorCar: elevatorSubsystemNodes){
+            if (elevatorCar.getElevatorCarID().equals(elevatorSubsystemCarID)){
+                targetedElevatorCar = elevatorCar;
+                break;
+            }
+        }
+        //Make sure that the elevator with the given id was found
+        if (targetedElevatorCar = null){
+            System.out.println("ERROR::: ElevatorCar with the given ID: " + elevatorSubsystemCarID + " does not exit!");
+            return null;
+        }
+        return targetedElevatorCar;
+    }
+
+    /** Notify the list of subFloorSubsystemNodes with the location of the elevator car.
+     * 
+     * @param floorNumber: The floor number where the elevator car was detected
+     */
+    private void notifySubFloorSubSystemNodesElevatorDetected(int floorNumber){
+        for (Thread floor : subFloorSubsystemNodes){
+            floor.notifyWithTheDetectedElevatorPosition(floorNumber);
+        }
+    }
+
+    /** Notify the elevator car that was detected with the floor it got detected at.
+     * 
+     * @param elevatorCarDetected: The elevator car detected
+     * @param floorNumber: The floor number where the elevator car was detected
+     */
+    private void notifyElevatorWithFloorDetected(int floorNumber, ElevatorSubsystem elevatorCarDetected){
+            elevatorCarDetected.notifyWithTheDetectedPosition(floorNumber);
+    }
+
+
     /** Used to notify the Schedular that an elevator call wes made.
      * NOTE: This method should only be used by a SubFloorSubsystem node
      *
      * @param elevatorMovementDirection: The direction at which the elevator wil be moving, must be Up, Down
      * @param floorNumber: The floor number where the elevator call was made
      */
-    public synchronized void notifySchedulerElevatorCallButtonClicked(String elevatorMovementDirection, int floorNumber){
+    public synchronized void notifySchedulerElevatorCallButtonClicked(HashMap<String, object> callCommand){
 
         //check the passed arguments is valid
        List<String> validMovementDirections = Arrays.asList("up", "down");
@@ -87,14 +153,25 @@ public class Scheduler {
         }
     }
 
-    /** Used to notify the Schedular that an elevator cas was detected.
-     * Note: This method should only be used by an arrival sensor.
-     *
-     * @param floorNumber: The floor number where the elevator car was detected
-     */
-    public synchronized void notifySchedulerElevatorDetected(int floorNumber){
-        //TODO
-    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /** Used to notify the Schedular that destination button(s) were clicked.
      * Note: This method should only be used by an ElevatorSubsystem node
@@ -103,24 +180,5 @@ public class Scheduler {
      */
     public synchronized void notifySchedulerDestinationButtonsClicked(List<Integer> destinationButtonsClicked){
         //TODO
-    }
-
-    /** Notify the list of subFloorSubsystemNodes with the location of the elevator car.
-     * 
-     * @param floorNumber: The floor number where the elevator car was detected
-     */
-    public void notifySubFloorSubSystemNodesWithElevatorDetectedFloor(int floorNumber){
-        for (Thread floor : subFloorSubsystemNodes){
-            floor.notifyWithTheDetectedElevatorPosition(floorNumber); //TODO
-        }
-    }
-
-    /** Notify the elevator car that was detected with the floor it got detected at.
-     * 
-     * @param elevatorCarDetected: The elevator car detected
-     * @param floorNumber: The floor number where the elevator car was detected
-     */
-    public void notifyElevatorWithFloorDetected(int floorNumber, ElevatorSubsystem elevatorCarDetected){
-            elevatorCarDetected.notifyWithTheDetectedPosition(floorNumber); //TODO
     }
 }
