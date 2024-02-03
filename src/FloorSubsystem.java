@@ -11,10 +11,19 @@ public class FloorSubsystem implements Runnable {
     private Scheduler scheduler;
     private String inputFilepath;
 
+    /**
+     * Constructor for FloorSubsystem thread
+     * @param scheduler The elevator scheduler
+     * @param inputFilepath The path of the requests input file
+     */
     public FloorSubsystem(Scheduler scheduler, String inputFilepath) {
         this.scheduler = scheduler;
         this.inputFilepath = inputFilepath;
     }
+
+    /**
+     * Parse each request in the input file and forward it to the scheduler
+     */
     public void run() {
         BufferedReader reader;
         try {
@@ -22,14 +31,18 @@ public class FloorSubsystem implements Runnable {
             String line = reader.readLine();
             Date firstTimestamp = null;
             Date initialTime = new Date();
+
+            // Iterate through each line in input file
             while (line != null) {
-                ElevatorCall elevatorCall = ElevatorCall.fromString(line);
+                ElevatorCall elevatorCall = ElevatorCall.fromString(line);  // Get a new ElevatorCall object from the current input line
 
                 if (firstTimestamp == null) {
                     firstTimestamp = elevatorCall.getTimestamp();
                 } else {
+                    // Calculate the difference between the desired time between subsequent requests and the elapsed time of program execution
                     Date currTimestamp = new Date();
                     long timeDifference = (elevatorCall.getTimestamp().getTime() - firstTimestamp.getTime()) - (currTimestamp.getTime() - initialTime.getTime());
+                    // Use the calculated difference to simulate time between requests
                     if (timeDifference > 0) {
                         try {
                             Thread.sleep(timeDifference);
@@ -39,7 +52,7 @@ public class FloorSubsystem implements Runnable {
                     }
                 }
 
-                scheduler.addRequest(elevatorCall);
+                scheduler.addRequest(elevatorCall); // Send request to scheduler
                 line = reader.readLine();
             }
 

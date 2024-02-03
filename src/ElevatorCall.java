@@ -11,11 +11,10 @@ import java.util.regex.Pattern;
  */
 public class ElevatorCall {
     private static final String REGEX_PATTERN = "([0-9]{2}:[0-9]{2}:[0-9]{2} \\d+ \\w+ \\d+)";
-    public enum Direction { UP, DOWN };
     private Date timestamp;
     private int startingFloor;
     private int targetFloor;
-    private Direction direction;
+    private String direction;
 
     /**
      * Construct a new ElevatorCall object
@@ -25,7 +24,7 @@ public class ElevatorCall {
      * @param targetFloor The target floor
      * @param direction The direction
      */
-    public ElevatorCall(Date timestamp, int startingFloor, int targetFloor, Direction direction) {
+    public ElevatorCall(Date timestamp, int startingFloor, int targetFloor, String direction) {
         this.timestamp = timestamp;
         this.startingFloor = startingFloor;
         this.targetFloor = targetFloor;
@@ -44,7 +43,7 @@ public class ElevatorCall {
         return targetFloor;
     }
 
-    public Direction getDirection() {
+    public String getDirection() {
         return direction;
     }
 
@@ -59,9 +58,11 @@ public class ElevatorCall {
         Date timestamp;
         int startingFloor;
         int targetFloor;
-        Direction direction;
+        String direction;
 
+        // Verify that the input line matches the defined regex expression
         if (matcher.matches()) {
+            // Parse timestamp, starting floor, direction, and target floor
             SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
             try {
                 timestamp = dateFormat.parse(matcher.group(1).split(" ")[0]);
@@ -70,19 +71,7 @@ public class ElevatorCall {
             }
 
             startingFloor = Integer.valueOf(matcher.group(1).split(" ")[1]);
-
-            String directionStr = matcher.group(1).split(" ")[2];
-            switch (directionStr) {
-                case "Up":
-                    direction = Direction.UP;
-                    break;
-                case "Down":
-                    direction = Direction.DOWN;
-                    break;
-                default:
-                    throw new RuntimeException("ElevatorCall direction must be 'Up' or 'Down'.");
-            }
-
+            direction = matcher.group(1).split(" ")[2];
             targetFloor = Integer.valueOf(matcher.group(1).split(" ")[3]);
 
         } else {
