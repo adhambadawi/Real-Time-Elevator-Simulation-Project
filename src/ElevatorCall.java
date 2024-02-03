@@ -16,8 +16,9 @@ public class ElevatorCall {
     private Date timestamp;
     private int startingFloor;
     private List<Integer> targetFloors;
+
     private String direction;
-    private ElevatorSubsystem owner;
+    private Runnable owner;
 
     /**
      * Construct a new ElevatorCall object
@@ -56,8 +57,12 @@ public class ElevatorCall {
         return owner;
     }
 
-    public void setOwner(ElevatorSubsystem owner) {
+    public void setOwner(Runnable owner) {
         this.owner = owner;
+    }
+
+    public int getHighestTargetedFloor() {
+        return targetFloors.get(targetFloors.size() - 1);
     }
 
     /**
@@ -148,5 +153,15 @@ public class ElevatorCall {
         }
 
         return new ElevatorCall(timestamp, startingFloor, targetFloor, direction);
+    }
+
+    @Override
+    public String toString() {
+        return "ElevatorCall{" +
+                "RequestTime=" + timestamp +
+                ", StartingFloor=" + startingFloor +
+                ", direction='" + direction + '\'' +
+                ", TargetFloor=" + targetFloors +
+                '}';
     }
 }

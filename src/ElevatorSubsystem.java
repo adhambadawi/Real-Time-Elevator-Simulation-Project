@@ -36,4 +36,15 @@ public class ElevatorSubsystem implements Runnable{
     public void run() {
 
     }
+
+
+
+    /** Notify the elevator car that was detected with the floor it got detected at.
+     * 
+     * @param elevatorCarDetected: The elevator car detected
+     * @param floorNumber: The floor number where the elevator car was detected
+     */
+    private void notifyElevatorWithFloorDetected(int floorNumber, ElevatorSubsystem elevatorCarDetected){
+        elevatorCarDetected.notifyWithTheDetectedPosition(floorNumber);
+}
 }
