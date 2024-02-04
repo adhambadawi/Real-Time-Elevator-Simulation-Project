@@ -1,4 +1,3 @@
-import java.time.LocalTime;
 import java.util.*;
 
 /**
@@ -9,6 +8,7 @@ import java.util.*;
  * Follow singleton design pattern to only allows instantiation of one Schedular object.
  * Satisfy the requirements where only one Schedular is needed in the system.
  * 
+ * @author Jaden Sutton
  * @author Amr Abdelazeem
  * @version 1.00
  */
@@ -89,7 +89,7 @@ public class Scheduler {
     }
 
     /** Used to notify the Schedular that an elevator cas was detected.
-     * Note: This method should only be used by an arrival sensor.
+     * Note: This method should only be used by an arrival sensor (ElevatorSubSystem).
      *
      * @param floorNumber: The floor number where the elevator car was detected
      */
@@ -100,7 +100,7 @@ public class Scheduler {
         //Notify the elevator to reflect its location on the screen and if the elevator is supposed to stop on that floor reached then makes the motor stop moving,
         // the floor light turn off, and the doors open.
         ElevatorSubsystem elevatorCarDetected = getElevatorCarWithTheGivenID(elevatorSubsystemCarID);
-
+        //Should also be notifying the elevator in the coming iterations for synchronization purpose 
         // notifyElevatorWithFloorDetected(floorNumber, elevatorCarDetected);
     }
 
@@ -167,172 +167,3 @@ public class Scheduler {
         return nextRequest;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//     /** Used to notify the Schedular that an elevator call wes made.
-//      * NOTE: This method should only be used by a SubFloorSubsystem node
-//      *
-//      * @param elevatorMovementDirection: The direction at which the elevator wil be moving, must be Up, Down
-//      * @param floorNumber: The floor number where the elevator call was made
-//      */
-//     public synchronized void notifySchedulerElevatorCallButtonClicked(HashMap<String, object> callCommand){
-
-//         //check the passed arguments is valid
-//        List<String> validMovementDirections = Arrays.asList("up", "down");
-//         if (!validMovementDirections.contains(elevatorMovementDirection.toLowerCase())){
-//             System.out.println("ERROR::: invalid movement direction '" + elevatorMovementDirection + "' was given!");
-//         }
-//         else{
-//             //TODO
-//         }
-//     }
-
-
-//     public void analyzeRequests(){
-
-//         //arrange the requests by time first then by direction
-//         requests.sort(Comparator.comparing(Request::getTime).thenComparing(Request::getFloor).thenComparing(Request::getDirection));
-
-//         //group the requests based on the floor elevator call, time proximity, and direction
-//         // List<List<Request>> groupedRequests = new ArrayList<>();
-//         // for (Request request : requests){
-//         //     boolean added = false;
-//         //     for (List<Request> group: groupedRequests){
-//         //         Request lastRequest = group.get(group.size() - 1);
-//         //         if(request.getFloor() == lastRequest.getFloor() &&
-//         //             request.getDirection().equals(lastRequest.getDirection()) &&
-//         //             Math.abs(request.getTime().toSecondOfDay() - lastRequest.time.toSecondOfDay()) <= 300) {
-//         //                 group.add(request);
-//         //                 added = true;
-//         //                 break;
-//         //         }
-//         //     }
-//         //     if (! added){
-//         //         List<Request> newGroup = new ArrayList<>();
-//         //         newGroup.add(request);
-//         //         groupedRequests.add(newGroup);
-//         //     }
-//         // }
-
-//         // Process requests and optimize for picking up passengers along the way
-//         List<Request> servingRequests = new ArrayList<>();
-//         for (Request request : requests) {
-//             if (canAddToServingRequests(request, servingRequests)) {
-//                 servingRequests.add(request);
-//             } else {
-//                 processServingRequests(servingRequests);
-//                 servingRequests.clear();
-//                 servingRequests.add(request);
-//             }
-//         }
-
-//         // Process any remaining requests
-//         processServingRequests(servingRequests);
-
-//         //ProcessRequest
-//         processRequest();
-//     }
-
-//     private boolean canAddToServingRequests(Request newRequest, List<Request> servingRequests) {
-//         // Check if the new request can be added to the serving requests based on direction and floor
-//         if (servingRequests.isEmpty()) {
-//             return true;
-//         }
-
-//         Request lastRequest = servingRequests.get(servingRequests.size() - 1);
-//         return newRequest.direction.equals(lastRequest.direction) &&
-//                 ((newRequest.direction.equals("UP") && newRequest.floor >= lastRequest.floor) ||
-//                  (newRequest.direction.equals("DOWN") && newRequest.floor <= lastRequest.floor));
-//     }
-
-//     private void processServingRequests(List<Request> servingRequests) {
-//         // Process the serving requests (e.g., move the elevator, open/close doors)
-//         for (Request request : servingRequests) {
-//             System.out.println("Elevator serving request: " + request);
-//         }
-//     }
-        
-
-
-//     public void processRequest(){
-//         Request firstRequest = requests.get(0);
-
-//     }
-
-
-
-
-//     /** Used to notify the Schedular that destination button(s) were clicked.
-//      * Note: This method should only be used by an ElevatorSubsystem node
-//      * 
-//      * @param destinationButtonsClicked: The list of the buttons clicked
-//      */
-//     public synchronized void notifySchedulerDestinationButtonsClicked(List<Integer> destinationButtonsClicked){
-//         //TODO
-//     }
-// }
