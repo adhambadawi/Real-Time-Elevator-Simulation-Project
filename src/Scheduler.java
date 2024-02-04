@@ -106,9 +106,7 @@ public class Scheduler {
 
         //Notify the elevator to reflect its location on the screen and if the elevator is supposed to stop on that floor reached then makes the motor stop moving,
         // the floor light turn off, and the doors open.
-        ElevatorSubsystem elevatorCarDetected = getElevatorCarWithTheGivenID(elevatorSubsystemCarID);
-        //Should also be notifying the elevator in the coming iterations for synchronization purpose 
-        // notifyElevatorWithFloorDetected(floorNumber, elevatorCarDetected);
+        // ElevatorSubsystem elevatorCarDetected = getElevatorCarWithTheGivenID(elevatorSubsystemCarID);
     }
 
     /**
@@ -163,7 +161,7 @@ public class Scheduler {
             }
         }
 
-        if (requestsComplete) {
+        if (requestQueue.size() == 0) {
             return null;
         }
 
@@ -179,15 +177,5 @@ public class Scheduler {
         activeTrips.add(nextRequest);
 
         return nextRequest;
-    }
-
-    public static void main(String[] args) {
-        Scheduler scheduler = getScheduler(new Scheduler());
-        Thread elevatorThread, floorThread;
-        elevatorThread = new Thread(new ElevatorSubsystem(scheduler));
-        floorThread = new Thread(new FloorSubsystem(scheduler, "ElevatorCalls"));
-
-        floorThread.start();
-        elevatorThread.start();
     }
 }
