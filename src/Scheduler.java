@@ -44,6 +44,40 @@ public class Scheduler {
         return scheduler;
     }
 
+    /** Used to register SubFloorSubsystem nodes (floors) to the SubFloorSubsystemNodes arraylist
+     *  Uses dependency injection to avoid circular dependency
+     *
+     * @param subFloorSubsystemNode: SubFloorSubsystem node to be added
+     */
+    public void registerSubFloorSubsystemNode(Runnable subFloorSubsystemNode){
+
+        //ensure the node getting registered is of type SubFloorSubsystemNode
+        if (subFloorSubsystemNode instanceof FloorSubsystem){
+            FloorSubsystemNodes.add(subFloorSubsystemNode);
+        }
+        else{
+            System.out.println("The Object trying to be registered is of type: " + subFloorSubsystemNode.getClass() + "\nAllowed object type is 'SubFloorSubsystem'");
+        }
+    }
+
+    /** Used to register ElevatorSubsystem nodes (elevator cars) to the elevatorSubsystemNodes arraylist
+     *  Uses dependency injection to avoid circular dependency
+     *
+     * NOTE: Should only has a size of 1 for this iteration since there is only one Elevator car
+     *
+     * @param elevatorSubsystemNode: elevatorSubsystem node to be added
+     */
+    public void registerElevatorSubsystemNode(Runnable elevatorSubsystemNode){
+
+        //ensure the node getting registered is of type SubFloorSubsystemNode
+        if (elevatorSubsystemNode instanceof ElevatorSubsystem){
+            elevatorSubsystemNodes.add(elevatorSubsystemNode);
+        }
+        else{
+            System.out.println("The Object trying to be registered is of type: " + elevatorSubsystemNode.getClass() + "\nAllowed object type is 'ElevatorSubsystem'");
+        }
+    }
+
     public synchronized void addRequest(ElevatorCall elevatorCall){
         //try to adding the coming request to an existing request
         System.out.println(String.format("[SCHEDULER] Received new elevator call: \n%s", elevatorCall));
