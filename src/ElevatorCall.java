@@ -46,6 +46,9 @@ public class ElevatorCall {
     }
 
     public synchronized Integer getNextTargetFloor() {
+        if (targetFloors.size() == 0) {
+            return null;
+        }
         return targetFloors.get(0);
     }
 
