@@ -45,10 +45,7 @@ public class ElevatorCall {
         return startingFloor;
     }
 
-    public synchronized Integer getNextFloor() {
-        if (targetFloors.size() == 0) {
-            return null;
-        }
+    public synchronized Integer getNextTargetFloor() {
         return targetFloors.get(0);
     }
 
@@ -61,7 +58,7 @@ public class ElevatorCall {
     }
 
     public ElevatorSubsystem getOwner() {
-        return owner;
+        return (ElevatorSubsystem) owner;
     }
 
     public void setOwner(ElevatorSubsystem owner) {
@@ -79,7 +76,7 @@ public class ElevatorCall {
         }
 
         insertTargetFloor(request.getStartingFloor());
-        insertTargetFloor(request.getNextFloor());
+        insertTargetFloor(request.getNextTargetFloor());
 
         return true;
     }

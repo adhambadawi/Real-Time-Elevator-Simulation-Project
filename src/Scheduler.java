@@ -8,6 +8,7 @@ import java.util.*;
  * Follow singleton design pattern to only allows instantiation of one Schedular object.
  * Satisfy the requirements where only one Schedular is needed in the system.
  * 
+ * @author Jaden Sutton
  * @author Amr Abdelazeem
  * @version 1.00
  */
@@ -56,7 +57,7 @@ public class Scheduler {
     }
 
     /** Used to notify the Schedular that an elevator cas was detected.
-     * Note: This method should only be used by an arrival sensor.
+     * Note: This method should only be used by an arrival sensor (ElevatorSubSystem).
      *
      * @param floorNumber: The floor number where the elevator car was detected
      */
@@ -67,7 +68,7 @@ public class Scheduler {
         //Notify the elevator to reflect its location on the screen and if the elevator is supposed to stop on that floor reached then makes the motor stop moving,
         // the floor light turn off, and the doors open.
         ElevatorSubsystem elevatorCarDetected = getElevatorCarWithTheGivenID(elevatorSubsystemCarID);
-
+        //Should also be notifying the elevator in the coming iterations for synchronization purpose 
         // notifyElevatorWithFloorDetected(floorNumber, elevatorCarDetected);
     }
 

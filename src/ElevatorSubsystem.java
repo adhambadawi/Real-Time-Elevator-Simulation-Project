@@ -1,10 +1,14 @@
 /**
+ * Class represents the elevator car that is moving inside the shaft
+ * 
+ * @author Jaden Sutton
  * @author Adham Badawi
+ * @version 1.00
  */
 
 public class ElevatorSubsystem implements Runnable{
-    private static final int MOVE_TIME = 8000;
-    private static final int DOOR_TIME = 4000;
+    private static final int MOVE_TIME = 8006;
+    private static final int DOOR_OPEN_TIME = 3238;
 
     private Scheduler scheduler;
     private static int elevatorIdCounter = 0;
@@ -40,13 +44,17 @@ public class ElevatorSubsystem implements Runnable{
 
     @Override
     public void run() {
-        // This is temporary, replace while(true) with flag
-        while (true) {
+        boolean availableTrips = true;
+        while (availableTrips) {
             currentTrip = scheduler.getNextTrip(this);
-            while (currentTrip.getNextFloor() != null) {
-                if (currentFloor < currentTrip.getNextFloor()) {
+            if (currentTrip == null){
+                availableTrips = false;
+                break;
+            }
+            while (currentTrip.getNextTargetFloor() != null) {
+                if (currentFloor < currentTrip.getNextTargetFloor()) {
                     move(1);
-                } else if (currentFloor > currentTrip.getNextFloor()) {
+                } else if (currentFloor > currentTrip.getNextTargetFloor()) {
                     move(-1);
                 } else {
                     toggleDoors();
@@ -57,9 +65,12 @@ public class ElevatorSubsystem implements Runnable{
     }
 
     public void toggleDoors() {
-        System.out.println("[ELEVATOR] Opening and closing doors");
+        System.out.println(String.format("[ELEVATOR] Opening and closing doors at floor %d", currentFloor));
         try {
-            Thread.sleep(2 * DOOR_TIME);
+            Thread.sleep(DOOR_OPEN_TIME);
+            System.out.println("[ELEVATOR] Doors open");
+            Thread.sleep(DOOR_OPEN_TIME);
+            System.out.println("[ELEVATOR] Doors closed");
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
