@@ -59,6 +59,7 @@ public class FloorSubsystem implements Runnable {
                 scheduler.addRequest(elevatorCall); // Send request to scheduler
                 line = reader.readLine();
             }
+            scheduler.signalRequestsComplete();
 
             reader.close();
         } catch (IOException e) {
@@ -72,6 +73,7 @@ public class FloorSubsystem implements Runnable {
      * @param currFloor current floor the elevator is on
      */
     public void updateElevatorCarDisplay(int elevatorId, int currFloor) {
+        System.out.println("Updated the floor display to reflect floor : " + currFloor);
         elevatorCarDisplay.put(elevatorId, currFloor);
     }
 }

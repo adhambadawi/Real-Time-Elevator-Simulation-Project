@@ -66,6 +66,7 @@ public class ElevatorSubsystem implements Runnable{
 
     public void toggleDoors() {
         System.out.println(String.format("[ELEVATOR] Opening and closing doors at floor %d", currentFloor));
+        System.out.println("Turn off floor light: " + currentFloor);
         try {
             Thread.sleep(DOOR_OPEN_TIME);
             System.out.println("[ELEVATOR] Doors open");
@@ -84,6 +85,7 @@ public class ElevatorSubsystem implements Runnable{
             throw new RuntimeException(e);
         }
         System.out.println(String.format("[ELEVATOR] Moved to floor %d", currentFloor));
+        scheduler.notifySchedulerElevatorDetected(currentFloor, elevatorId);
         //scheduler.notifySchedulerElevatorDetected(elevatorId, currentFloor);
     }
 }
