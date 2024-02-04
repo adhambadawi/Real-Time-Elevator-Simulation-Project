@@ -34,6 +34,7 @@ public class ElevatorCall {
         this.direction = direction;
         this.owner = null;
         targetFloors = new ArrayList<Integer>();
+        targetFloors.add(startingFloor);
         targetFloors.add(targetFloor);
     }
 
