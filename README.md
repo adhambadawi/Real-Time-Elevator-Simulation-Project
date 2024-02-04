@@ -78,8 +78,6 @@ Sameh Gawish
 5. Sequence Diagram: Dana El Sherif
 6. UML Class Diagram: Sameh Gawish
 7. Readme: Yasmina Younes
-All members contributed equally in the design and implementation of the code. 
-Jaden Sutton was in charge of the FloorSubsystem. Amr Abdelazeem, Adham Badawi, and Dana El Sherif were in charge of the Scheduler. Amr Abdelazeem, Adham Badawi, Yasmina Younes, and Sameh Gawish were in charge of the Elevator Subsystem. Dana El Sherif was in charge
 
 # Version History
 1.00: Initial release
