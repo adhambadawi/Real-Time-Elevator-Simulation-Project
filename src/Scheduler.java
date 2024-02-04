@@ -1,4 +1,3 @@
-import java.time.LocalTime;
 import java.util.*;
 
 /**
@@ -9,24 +8,28 @@ import java.util.*;
  * Follow singleton design pattern to only allows instantiation of one Schedular object.
  * Satisfy the requirements where only one Schedular is needed in the system.
  * 
+ * @author Jaden Sutton
  * @author Amr Abdelazeem
  * @version 1.00
  */
 
 public class Scheduler {
-
-    private List<Runnable>  subFloorSubsystemNodes; //Represents the list of subFloorSubsystem threads.
+    private boolean requestsComplete;
+    private List<Runnable>  FloorSubsystemNodes; //Represents the list of subFloorSubsystem threads.
     private List<Runnable>  elevatorSubsystemNodes; //Represents the list of elevatorSubsystem threads.
-    private List<Request> requests; // list of the elevator requests
+    private List<ElevatorCall> requestQueue; // queue of pending elevator calls
+    private List<ElevatorCall> activeTrips; // active elevator trips indexed by elevator id
 
     //Singleton object 
-     private static Scheduler scheduler;
+    private static Scheduler scheduler;
     
 
     private Scheduler() {
-        subFloorSubsystemNodes = new ArrayList<>();
+        FloorSubsystemNodes = new ArrayList<>();
         elevatorSubsystemNodes = new ArrayList<>();
-        requests = new ArrayList<>();
+        requestQueue = new ArrayList<>();
+        activeTrips = new ArrayList<>();
+        requestsComplete = false;
     }
 
     /** Creates and returns Scheduler object upon check singularity.
@@ -41,55 +44,37 @@ public class Scheduler {
         return scheduler;
     }
 
-    public void addRequest(Request request){
-        requests.add(request);
+    public synchronized void addRequest(ElevatorCall elevatorCall){
+        //try to adding the coming request to an existing request
+        System.out.println(String.format("[SCHEDULER] Received new elevator call: \n%s", elevatorCall));
+        for (ElevatorCall elevatorCallIterator: activeTrips) {
+            if (elevatorCallIterator.mergeRequest(elevatorCall)){
+                return;
+            }
+        }
+        //If no current request satisfy the coming request then append at the end of the requests list
+        requestQueue.add(elevatorCall);
+        notifyAll();
     }
 
-    /** Used to register SubFloorSubsystem nodes (floors) to the SubFloorSubsystemNodes arraylist
-     *  Uses dependency injection to avoid circular dependency
-     *
-     * @param SubFloorSubsystemNode: SubFloorSubsystem node to be added
-     */
-    public void registerSubFloorSubsystemNode(Runnable subFloorSubsystemNode){
-
-        //ensure the node getting registered is of type SubFloorSubsystemNode
-        if (subFloorSubsystemNode instanceof FloorSubsystem){
-            subFloorSubsystemNodes.add(subFloorSubsystemNode);
-        }
-        else{
-            System.out.println("The Object trying to be registered is of type: " + subFloorSubsystemNode.getClass() + "\nAllowed object type is 'SubFloorSubsystem'");
-        }
-    }
-
-    /** Used to register ElevatorSubsystem nodes (elevator cars) to the elevatorSubsystemNodes arraylist
-     *  Uses dependency injection to avoid circular dependency
-     *
-     * @param elevatorSubsystemNode: elevatorSubsystem node to be added
-     */
-    public void registerElevatorSubsystemNode(Thread elevatorSubsystemNode){
-
-        //ensure the node getting registered is of type SubFloorSubsystemNode
-        if (elevatorSubsystemNode instanceof ElevatorSubsystem){
-            elevatorSubsystemNodes.add(elevatorSubsystemNode);
-        }
-        else{
-            System.out.println("The Object trying to be registered is of type: " + elevatorSubsystemNode.getClass() + "\nAllowed object type is 'ElevatorSubsystem'");
-        }
+    public void signalRequestsComplete() {
+        requestsComplete = true;
     }
 
     /** Used to notify the Schedular that an elevator cas was detected.
-     * Note: This method should only be used by an arrival sensor.
+     * Note: This method should only be used by an arrival sensor (ElevatorSubSystem).
      *
      * @param floorNumber: The floor number where the elevator car was detected
      */
     public synchronized void notifySchedulerElevatorDetected(Integer floorNumber, int elevatorSubsystemCarID){
         //Notify the floors to reflect the new location that elevator car is approaching and going away
-        notifyFloorSubSystemNodesElevatorDetected(floorNumber);
+        notifyFloorSubSystemNodesElevatorDetected(elevatorSubsystemCarID, floorNumber);
 
         //Notify the elevator to reflect its location on the screen and if the elevator is supposed to stop on that floor reached then makes the motor stop moving,
         // the floor light turn off, and the doors open.
         ElevatorSubsystem elevatorCarDetected = getElevatorCarWithTheGivenID(elevatorSubsystemCarID);
-        notifyElevatorWithFloorDetected(floorNumber, elevatorCarDetected);
+        //Should also be notifying the elevator in the coming iterations for synchronization purpose 
+        // notifyElevatorWithFloorDetected(floorNumber, elevatorCarDetected);
     }
 
     /**
@@ -102,13 +87,16 @@ public class Scheduler {
         ElevatorSubsystem targetedElevatorCar = null;
 
         for (Runnable elevatorCar: elevatorSubsystemNodes){
-            if (elevatorCar.getElevatorCarID().equals(elevatorSubsystemCarID)){
-                targetedElevatorCar = elevatorCar;
-                break;
+            if (elevatorCar instanceof ElevatorSubsystem){
+                ElevatorSubsystem elevator = (ElevatorSubsystem) elevatorCar;
+                if (elevator.getElevatorId() == elevatorSubsystemCarID){
+                    targetedElevatorCar = elevator;
+                    break;
+                }
             }
         }
         //Make sure that the elevator with the given id was found
-        if (targetedElevatorCar = null){
+        if (targetedElevatorCar ==  null){
             System.out.println("ERROR::: ElevatorCar with the given ID: " + elevatorSubsystemCarID + " does not exit!");
             return null;
         }
@@ -119,87 +107,53 @@ public class Scheduler {
      * 
      * @param floorNumber: The floor number where the elevator car was detected
      */
-    private void notifyFloorSubSystemNodesElevatorDetected(int floorNumber){
-        for (Thread floor : subFloorSubsystemNodes){
-            floor.notifyWithTheDetectedElevatorPosition(floorNumber);
-        }
-    }
-
-    /** Notify the elevator car that was detected with the floor it got detected at.
-     * 
-     * @param elevatorCarDetected: The elevator car detected
-     * @param floorNumber: The floor number where the elevator car was detected
-     */
-    private void notifyElevatorWithFloorDetected(int floorNumber, ElevatorSubsystem elevatorCarDetected){
-            elevatorCarDetected.notifyWithTheDetectedPosition(floorNumber);
-    }
-
-
-    /** Used to notify the Schedular that an elevator call wes made.
-     * NOTE: This method should only be used by a SubFloorSubsystem node
-     *
-     * @param elevatorMovementDirection: The direction at which the elevator wil be moving, must be Up, Down
-     * @param floorNumber: The floor number where the elevator call was made
-     */
-    public synchronized void notifySchedulerElevatorCallButtonClicked(HashMap<String, object> callCommand){
-
-        //check the passed arguments is valid
-       List<String> validMovementDirections = Arrays.asList("up", "down");
-        if (!validMovementDirections.contains(elevatorMovementDirection.toLowerCase())){
-            System.out.println("ERROR::: invalid movement direction '" + elevatorMovementDirection + "' was given!");
-        }
-        else{
-            //TODO
-        }
-    }
-
-
-    public void analyzeRequests(){
-
-        //arrange the requests by time first then by direction
-        requests.sort(Comparator.comparing(Request::getTime).thenComparing(Request::getDirection));
-
-        //group the requests based on the floor elevator call, time proximity, and direction
-        List<List<Request>> groupedRequests = new ArrayList<>();
-        for (Request request : requests){
-            boolean added = false;
-            for (List<Request> group: groupedRequests){
-                Request lastRequest = group.get(group.size() - 1);
-                if(request.getFloor() == lastRequest.getFloor() &&
-                    request.getDirection().equals(lastRequest.getDirection()) &&
-                    Math.abs(request.getTime().toSecondOfDay() - lastRequest.time.toSecondOfDay()) <= 300) {
-                        group.add(request);
-                        added = true;
-                        break;
-                }
+    private void notifyFloorSubSystemNodesElevatorDetected(int elevatorSubsystemCarID, int floorNumber){
+        for (Runnable floor : FloorSubsystemNodes){
+            if (floor instanceof FloorSubsystem){
+            FloorSubsystem floorSubSystem = (FloorSubsystem) floor;
+            floorSubSystem.updateElevatorCarDisplay(elevatorSubsystemCarID, floorNumber);
             }
-            if (! added){
-                List<Request> newGroup = new ArrayList<>();
-                newGroup.add(request);
-                groupedRequests.add(newGroup);
+        }
+    }
+
+    public synchronized ElevatorCall getNextTrip(ElevatorSubsystem caller) {
+        if (caller.getCurrentTrip() != null) {
+            activeTrips.remove(caller.getCurrentTrip());
+        }
+
+        while (requestQueue.size() == 0 && requestsComplete == false) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
 
-        //ProcessRequest
-        processRequest();
+        if (requestsComplete) {
+            return null;
+        }
+
+        ElevatorCall nextRequest = requestQueue.remove(0);
+        nextRequest.setOwner(caller);
+
+        for (ElevatorCall request : requestQueue) {
+            if (nextRequest.mergeRequest(request)) {
+                requestQueue.remove(request);
+            }
+        }
+
+        activeTrips.add(nextRequest);
+
+        return nextRequest;
     }
-        
 
+    public static void main(String[] args) {
+        Scheduler scheduler = getScheduler(new Scheduler());
+        Thread elevatorThread, floorThread;
+        elevatorThread = new Thread(new ElevatorSubsystem(scheduler));
+        floorThread = new Thread(new FloorSubsystem(scheduler, "ElevatorCalls"));
 
-    public void processRequest(){
-        Request firstRequest = requests.get(0);
-        
-    }
-
-
-
-
-    /** Used to notify the Schedular that destination button(s) were clicked.
-     * Note: This method should only be used by an ElevatorSubsystem node
-     * 
-     * @param destinationButtonsClicked: The list of the buttons clicked
-     */
-    public synchronized void notifySchedulerDestinationButtonsClicked(List<Integer> destinationButtonsClicked){
-        //TODO
+        floorThread.start();
+        elevatorThread.start();
     }
 }

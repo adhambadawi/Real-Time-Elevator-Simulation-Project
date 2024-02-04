@@ -16,6 +16,7 @@ public class ElevatorCall {
     private Date timestamp;
     private int startingFloor;
     private List<Integer> targetFloors;
+
     private String direction;
     private ElevatorSubsystem owner;
 
@@ -44,8 +45,15 @@ public class ElevatorCall {
         return startingFloor;
     }
 
-    public int getNextFloor() {
+    public synchronized Integer getNextTargetFloor() {
+        if (targetFloors.size() == 0) {
+            return null;
+        }
         return targetFloors.get(0);
+    }
+
+    public synchronized void arrivedAtFloor() {
+        targetFloors.remove(0);
     }
 
     public String getDirection() {
@@ -53,7 +61,7 @@ public class ElevatorCall {
     }
 
     public ElevatorSubsystem getOwner() {
-        return owner;
+        return (ElevatorSubsystem) owner;
     }
 
     public void setOwner(ElevatorSubsystem owner) {
@@ -65,13 +73,13 @@ public class ElevatorCall {
      * @param request the incoming request
      * @return true if request was merged, false otherwise
      */
-    public boolean mergeRequest(ElevatorCall request) {
+    public synchronized boolean mergeRequest(ElevatorCall request) {
         if (!canMerge(request)) {
             return false;
         }
 
         insertTargetFloor(request.getStartingFloor());
-        insertTargetFloor(request.getNextFloor());
+        insertTargetFloor(request.getNextTargetFloor());
 
         return true;
     }
@@ -148,5 +156,15 @@ public class ElevatorCall {
         }
 
         return new ElevatorCall(timestamp, startingFloor, targetFloor, direction);
+    }
+
+    @Override
+    public String toString() {
+        return "ElevatorCall{" +
+                "RequestTime=" + timestamp +
+                ", StartingFloor=" + startingFloor +
+                ", direction='" + direction + '\'' +
+                ", TargetFloor=" + targetFloors +
+                '}';
     }
 }
