@@ -16,7 +16,7 @@ public class ElevatorSubsystem implements Runnable{
      * Constructor for ElevatorSubsystem thread
      * @param scheduler The elevator scheduler
      */
-    public void ElevatorSubsystemystem(Scheduler scheduler) {
+    public ElevatorSubsystem(Scheduler scheduler) {
         elevatorId = elevatorIdCounter++;
         this.scheduler = scheduler;
         currentFloor = 1;
@@ -57,6 +57,7 @@ public class ElevatorSubsystem implements Runnable{
     }
 
     public void toggleDoors() {
+        System.out.println("[ELEVATOR] Opening and closing doors");
         try {
             Thread.sleep(2 * DOOR_TIME);
         } catch (InterruptedException e) {
@@ -71,17 +72,7 @@ public class ElevatorSubsystem implements Runnable{
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        scheduler.notifySchedulerElevatorDetected(elevatorId, currentFloor);
+        System.out.println(String.format("[ELEVATOR] Moved to floor %d", currentFloor));
+        //scheduler.notifySchedulerElevatorDetected(elevatorId, currentFloor);
     }
-
-
-
-    /** Notify the elevator car that was detected with the floor it got detected at.
-     * 
-     * @param elevatorCarDetected: The elevator car detected
-     * @param floorNumber: The floor number where the elevator car was detected
-     */
-    private void notifyElevatorWithFloorDetected(int floorNumber, ElevatorSubsystem elevatorCarDetected){
-        elevatorCarDetected.notifyWithTheDetectedPosition(floorNumber);
-}
 }

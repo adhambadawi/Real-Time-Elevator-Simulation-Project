@@ -1,4 +1,3 @@
-import java.time.LocalTime;
 import java.util.*;
 
 /**
@@ -43,8 +42,9 @@ public class Scheduler {
         return scheduler;
     }
 
-    public void addRequest(ElevatorCall elevatorCall){
+    public synchronized void addRequest(ElevatorCall elevatorCall){
         //try to adding the coming request to an existing request
+        System.out.println(String.format("[SCHEDULER] Received new elevator call: \n%s", elevatorCall));
         for (ElevatorCall elevatorCallIterator: activeTrips) {
             if (elevatorCallIterator.mergeRequest(elevatorCall)){
                 return;
@@ -52,40 +52,7 @@ public class Scheduler {
         }
         //If no current request satisfy the coming request then append at the end of the requests list
         requestQueue.add(elevatorCall);
-    }
-
-    /** Used to register SubFloorSubsystem nodes (floors) to the SubFloorSubsystemNodes arraylist
-     *  Uses dependency injection to avoid circular dependency
-     *
-     * @param SubFloorSubsystemNode: SubFloorSubsystem node to be added
-     */
-    public void registerSubFloorSubsystemNode(Runnable subFloorSubsystemNode){
-
-        //ensure the node getting registered is of type SubFloorSubsystemNode
-        if (subFloorSubsystemNode instanceof FloorSubsystem){
-            FloorSubsystemNodes.add(subFloorSubsystemNode);
-        }
-        else{
-            System.out.println("The Object trying to be registered is of type: " + subFloorSubsystemNode.getClass() + "\nAllowed object type is 'SubFloorSubsystem'");
-        }
-    }
-
-    /** Used to register ElevatorSubsystem nodes (elevator cars) to the elevatorSubsystemNodes arraylist
-     *  Uses dependency injection to avoid circular dependency
-     * 
-     * NOTE: Should only has a size of 1 for this iteration since there is only one Elevator car
-     *
-     * @param elevatorSubsystemNode: elevatorSubsystem node to be added
-     */
-    public void registerElevatorSubsystemNode(Runnable elevatorSubsystemNode){
-
-        //ensure the node getting registered is of type SubFloorSubsystemNode
-        if (elevatorSubsystemNode instanceof ElevatorSubsystem){
-            elevatorSubsystemNodes.add(elevatorSubsystemNode);
-        }
-        else{
-            System.out.println("The Object trying to be registered is of type: " + elevatorSubsystemNode.getClass() + "\nAllowed object type is 'ElevatorSubsystem'");
-        }
+        notifyAll();
     }
 
     /** Used to notify the Schedular that an elevator cas was detected.
@@ -148,9 +115,12 @@ public class Scheduler {
             activeTrips.remove(caller.getCurrentTrip());
         }
 
-        if (requestQueue.size() == 0) {
-            System.out.println("There is no current elevator requests to process");
-            return null;
+        while (requestQueue.size() == 0) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         ElevatorCall nextRequest = requestQueue.remove(0);
@@ -165,6 +135,16 @@ public class Scheduler {
         activeTrips.add(nextRequest);
 
         return nextRequest;
+    }
+
+    public static void main(String[] args) {
+        Scheduler scheduler = new Scheduler();
+        Thread elevatorThread, floorThread;
+        elevatorThread = new Thread(new ElevatorSubsystem(scheduler));
+        floorThread = new Thread(new FloorSubsystem(scheduler, "ElevatorCalls"));
+
+        floorThread.start();
+        elevatorThread.start();
     }
 }
 

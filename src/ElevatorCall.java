@@ -18,7 +18,7 @@ public class ElevatorCall {
     private List<Integer> targetFloors;
 
     private String direction;
-    private Runnable owner;
+    private ElevatorSubsystem owner;
 
     /**
      * Construct a new ElevatorCall object
@@ -46,6 +46,9 @@ public class ElevatorCall {
     }
 
     public synchronized Integer getNextFloor() {
+        if (targetFloors.size() == 0) {
+            return null;
+        }
         return targetFloors.get(0);
     }
 
@@ -61,7 +64,7 @@ public class ElevatorCall {
         return owner;
     }
 
-    public void setOwner(Runnable owner) {
+    public void setOwner(ElevatorSubsystem owner) {
         this.owner = owner;
     }
 
