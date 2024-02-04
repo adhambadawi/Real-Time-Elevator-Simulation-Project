@@ -10,7 +10,7 @@ public class ElevatorCallTest {
 
         assertFalse(upRequest1.mergeRequest(upRequest2));
 
-        ElevatorSubsystem elevator = new ElevatorSubsystem();
+        ElevatorSubsystem elevator = new ElevatorSubsystem(Scheduler.getScheduler(null));
         upRequest1.setOwner(elevator);
 
         ElevatorCall downRequest1 = new ElevatorCall(null, 10, 1, "Down");
