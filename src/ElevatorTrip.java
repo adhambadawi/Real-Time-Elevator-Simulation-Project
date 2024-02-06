@@ -11,14 +11,14 @@ import java.util.regex.Pattern;
  *
  * @author Jaden Sutton
  */
-public class ElevatorCall {
+public class ElevatorTrip {
     private static final String REGEX_PATTERN = "([0-9]{2}:[0-9]{2}:[0-9]{2} \\d+ \\w+ \\d+)";
-    private Date timestamp;
-    private int startingFloor;
+    private final Date timestamp;
+    private final int startingFloor;
     private List<Integer> targetFloors;
 
-    private String direction;
-    private ElevatorSubsystem owner;
+    private final String direction;
+    private Integer currentFloor;
 
     /**
      * Construct a new ElevatorCall object
@@ -28,12 +28,14 @@ public class ElevatorCall {
      * @param targetFloor The target floor
      * @param direction The direction
      */
-    public ElevatorCall(Date timestamp, int startingFloor, int targetFloor, String direction) {
+    public ElevatorTrip(Date timestamp, int startingFloor, int targetFloor, String direction) {
         this.timestamp = timestamp;
         this.startingFloor = startingFloor;
         this.direction = direction;
-        this.owner = null;
-        targetFloors = new ArrayList<Integer>();
+
+        currentFloor = null;
+
+        targetFloors = new ArrayList<>();
         targetFloors.add(startingFloor);
         targetFloors.add(targetFloor);
     }
@@ -46,27 +48,26 @@ public class ElevatorCall {
         return startingFloor;
     }
 
-    public synchronized Integer getNextTargetFloor() {
+    public Integer getNextTargetFloor() {
         if (targetFloors.size() == 0) {
             return null;
         }
         return targetFloors.get(0);
     }
 
-    public synchronized void arrivedAtFloor() {
-        targetFloors.remove(0);
-    }
-
     public String getDirection() {
         return direction;
     }
 
-    public ElevatorSubsystem getOwner() {
-        return (ElevatorSubsystem) owner;
+    public Integer getCurrentFloor() {
+        return currentFloor;
     }
 
-    public void setOwner(ElevatorSubsystem owner) {
-        this.owner = owner;
+    public void setCurrentFloor(Integer currentFloor) {
+        this.currentFloor = currentFloor;
+        if (currentFloor == getNextTargetFloor()) {
+            targetFloors.remove(0);
+        }
     }
 
     /**
@@ -74,12 +75,13 @@ public class ElevatorCall {
      * @param request the incoming request
      * @return true if request was merged, false otherwise
      */
-    public synchronized boolean mergeRequest(ElevatorCall request) {
+    public boolean mergeRequest(ElevatorTrip request) {
         if (!canMerge(request)) {
             return false;
         }
 
         insertTargetFloor(request.getStartingFloor());
+        request.setCurrentFloor(request.getStartingFloor());
         insertTargetFloor(request.getNextTargetFloor());
 
         return true;
@@ -90,20 +92,20 @@ public class ElevatorCall {
      * @param request incoming request
      * @return true if the requests can be merged, false otherwise
      */
-    private boolean canMerge(ElevatorCall request) {
-        if (owner == null) {
+    private boolean canMerge(ElevatorTrip request) {
+        if (currentFloor == null) {
             // Cannot merge with this request unless it is currently being serviced as we don't know where the physical elevator is
             return false;
-        } else if (request.getOwner() != null) {
+        } else if (request.getCurrentFloor() != null) {
             // Cannot merge a request already being serviced
             return false;
         } else if (!direction.equals(request.getDirection())) {
             // Requests cannot be merged if directions are opposite
             return false;
-        } else if (direction.equals("Up") && owner.getCurrentFloor() >= request.getStartingFloor()) {
+        } else if (direction.equals("Up") && currentFloor >= request.getStartingFloor() && (getNextTargetFloor() == null || getNextTargetFloor() > request.getStartingFloor())) {
             // Requests cannot be merged if this request has already passed the starting floor of the incoming request
             return false;
-        } else if (direction.equals("Down") && owner.getCurrentFloor() <= request.getStartingFloor()) {
+        } else if (direction.equals("Down") && currentFloor <= request.getStartingFloor() && (getNextTargetFloor() == null || getNextTargetFloor() < request.getStartingFloor())) {
             return false;
         }
 
@@ -116,10 +118,13 @@ public class ElevatorCall {
      */
     private void insertTargetFloor(int targetFloor) {
         int insertionIndex = 0;
-        while ((direction.equals("Up") && targetFloors.get(insertionIndex) < targetFloor) || (direction.equals("Down") && targetFloors.get(insertionIndex) > targetFloor)) {
+        while (insertionIndex < targetFloors.size() && (direction.equals("Up") && targetFloors.get(insertionIndex) < targetFloor) || (direction.equals("Down") && targetFloors.get(insertionIndex) > targetFloor)) {
             insertionIndex += 1;
         }
-        if (targetFloors.get(insertionIndex) != targetFloor) {
+        if (insertionIndex >= targetFloors.size()) {
+            // Append new target floor to end of target floors if insertion index is out of bounds
+            targetFloors.add(targetFloor);
+        } else if (targetFloors.get(insertionIndex) != targetFloor) {
             // Only add requests target floor to target floors list if not already included
             targetFloors.add(insertionIndex, targetFloor);
         }
@@ -129,7 +134,7 @@ public class ElevatorCall {
      * Construct a new ElevatorCall object using a string representation
      * @param repr
      */
-    public static ElevatorCall fromString(String repr) {
+    public static ElevatorTrip fromString(String repr) {
         Pattern pattern = Pattern.compile(REGEX_PATTERN);
         Matcher matcher = pattern.matcher(repr);
 
@@ -156,7 +161,7 @@ public class ElevatorCall {
             throw new RuntimeException("ElevatorCall string representation does not align with required format.");
         }
 
-        return new ElevatorCall(timestamp, startingFloor, targetFloor, direction);
+        return new ElevatorTrip(timestamp, startingFloor, targetFloor, direction);
     }
 
     @Override

@@ -5,13 +5,13 @@ This documentation provides an overview of the Elevator System Simulation projec
 # Overview
 The system comprises several key components:
 
-ElevatorCall: Represents a request for elevator service, including details such as the time of the call, the starting floor, the target floor(s), and the direction of travel.
+ElevatorTrip: Represents a request for elevator service, including details such as the time of the call, the starting floor, the target floor(s), and the direction of travel.
 
-ElevatorSubsystem: Manages the movement of the elevator, including opening and closing doors, moving between floors, and servicing ElevatorCall requests.
+Elevator: Manages the movement of the elevator, including opening and closing doors, moving between floors, and servicing ElevatorTrip requests.
 
-FloorSubsystem: Simulates the arrival of passengers at various floors and generates ElevatorCall requests based on input data.
+FloorSubsystem: Simulates the arrival of passengers at various floors and generates ElevatorTrip requests based on input data.
 
-Scheduler: Coordinates between FloorSubsystem and ElevatorSubsystem, ensuring that elevator calls are serviced in an efficient manner. It operates on a singleton design pattern to ensure only one instance manages the elevator system.
+Scheduler: Coordinates between FloorSubsystem and Elevator, ensuring that elevator calls are serviced in an efficient manner. It operates on a singleton design pattern to ensure only one instance manages the elevator system.
 
 # Features
 Elevator Call Handling: Processes elevator calls with details such as timestamp, starting floor, and target floor, and direction.
@@ -60,7 +60,7 @@ Input File Line Breakdown:
 14:05:45 1 Up 6: At 14:05:45, a call is made from floor 1 to go up to floor 6.
 
 # Processing Input File
-The FloorSubsystem reads each line from the input file, parsing the timestamp, starting floor, direction, and target floor. It simulates the delay between calls based on the timestamps and forwards the elevator call requests to the Scheduler, which then coordinates the servicing of these calls by the ElevatorSubsystem.
+The FloorSubsystem reads each line from the input file, parsing the timestamp, starting floor, direction, and target floor. It simulates the delay between calls based on the timestamps and forwards the elevator call requests to the Scheduler, which then coordinates the servicing of these calls by the Elevator.
 
 # Authors
 Jaden Sutton

@@ -38,14 +38,14 @@ public class FloorSubsystem implements Runnable {
 
             // Iterate through each line in input file
             while (line != null) {
-                ElevatorCall elevatorCall = ElevatorCall.fromString(line);  // Get a new ElevatorCall object from the current input line
+                ElevatorTrip elevatorTrip = ElevatorTrip.fromString(line);  // Get a new ElevatorCall object from the current input line
 
                 if (firstTimestamp == null) {
-                    firstTimestamp = elevatorCall.getTimestamp();
+                    firstTimestamp = elevatorTrip.getTimestamp();
                 } else {
                     // Calculate the difference between the desired time between subsequent requests and the elapsed time of program execution
                     Date currTimestamp = new Date();
-                    long timeDifference = (elevatorCall.getTimestamp().getTime() - firstTimestamp.getTime()) - (currTimestamp.getTime() - initialTime.getTime());
+                    long timeDifference = (elevatorTrip.getTimestamp().getTime() - firstTimestamp.getTime()) - (currTimestamp.getTime() - initialTime.getTime());
                     // Use the calculated difference to simulate time between requests
                     if (timeDifference > 0) {
                         try {
@@ -56,7 +56,7 @@ public class FloorSubsystem implements Runnable {
                     }
                 }
 
-                scheduler.addRequest(elevatorCall); // Send request to scheduler
+                scheduler.addRequest(elevatorTrip); // Send request to scheduler
                 line = reader.readLine();
             }
             scheduler.signalRequestsComplete();
