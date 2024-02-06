@@ -15,6 +15,8 @@ public class ElevatorCall {
     private static final String REGEX_PATTERN = "([0-9]{2}:[0-9]{2}:[0-9]{2} \\d+ \\w+ \\d+)";
     private Date timestamp;
     private int startingFloor;
+
+
     private List<Integer> targetFloors;
 
     private String direction;
@@ -51,6 +53,10 @@ public class ElevatorCall {
             return null;
         }
         return targetFloors.get(0);
+    }
+
+    public List<Integer> getTargetFloors() {
+        return targetFloors;
     }
 
     public synchronized void arrivedAtFloor() {
