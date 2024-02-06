@@ -4,10 +4,10 @@ import java.util.*;
  * Class reposnisple for receiving and notifying the different elevator system 
  * classes with the data received/provided whenever there is a signal received
  * from the Arrival sensor, or the Elevator or the Subfloor classes.
- * 
+ *
  * Follow singleton design pattern to only allows instantiation of one Schedular object.
  * Satisfy the requirements where only one Schedular is needed in the system.
- * 
+ *
  * @author Jaden Sutton
  * @author Amr Abdelazeem
  * @version 1.00
@@ -20,11 +20,11 @@ public class Scheduler {
     private List<ElevatorCall> requestQueue; // queue of pending elevator calls
     private List<ElevatorCall> activeTrips; // active elevator trips indexed by elevator id
 
-    //Singleton object 
+    //Singleton object
     private static Scheduler scheduler;
-    
 
-    private Scheduler() {
+
+    Scheduler() {
         FloorSubsystemNodes = new ArrayList<>();
         elevatorSubsystemNodes = new ArrayList<>();
         requestQueue = new ArrayList<>();
@@ -34,7 +34,7 @@ public class Scheduler {
 
     /** Creates and returns Scheduler object upon check singularity.
      * @return Agent object
-    */
+     */
     public static Scheduler getScheduler(Scheduler scheduler){
         if (scheduler == null){
             synchronized (Scheduler.class) {
@@ -110,10 +110,10 @@ public class Scheduler {
     }
 
     /**
-    * Get the elevator car with ID provided
-    * @param elevatorSubsystemCarID: the elevator car ID
-    * @return ElevatorSubsystem elevatorCar: the elevator car with id given.
-    */
+     * Get the elevator car with ID provided
+     * @param elevatorSubsystemCarID: the elevator car ID
+     * @return ElevatorSubsystem elevatorCar: the elevator car with id given.
+     */
     private ElevatorSubsystem getElevatorCarWithTheGivenID(int elevatorSubsystemCarID){
 
         ElevatorSubsystem targetedElevatorCar = null;
@@ -136,14 +136,14 @@ public class Scheduler {
     }
 
     /** Notify the list of subFloorSubsystemNodes with the location of the elevator car.
-     * 
+     *
      * @param floorNumber: The floor number where the elevator car was detected
      */
     private void notifyFloorSubSystemNodesElevatorDetected(int elevatorSubsystemCarID, int floorNumber){
         for (Runnable floor : FloorSubsystemNodes){
             if (floor instanceof FloorSubsystem){
-            FloorSubsystem floorSubSystem = (FloorSubsystem) floor;
-            floorSubSystem.updateElevatorCarDisplay(elevatorSubsystemCarID, floorNumber);
+                FloorSubsystem floorSubSystem = (FloorSubsystem) floor;
+                floorSubSystem.updateElevatorCarDisplay(elevatorSubsystemCarID, floorNumber);
             }
         }
     }

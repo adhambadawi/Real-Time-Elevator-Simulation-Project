@@ -1,6 +1,6 @@
 /**
  * Class represents the elevator car that is moving inside the shaft
- * 
+ *
  * @author Jaden Sutton
  * @author Adham Badawi
  * @version 1.00
@@ -26,18 +26,18 @@ public class ElevatorSubsystem implements Runnable{
         currentFloor = 1;
         currentTrip = null;
     }
-    
+
     public int getElevatorId() {
         return elevatorId;
     }
-    
+
     public int getCurrentFloor() {
         return currentFloor;
     }
 
     public ElevatorCall getCurrentTrip() {return currentTrip; }
-    
-    
+
+
     public void setCurrentFloor(int currentFloor) {
         this.currentFloor = currentFloor;
     }
