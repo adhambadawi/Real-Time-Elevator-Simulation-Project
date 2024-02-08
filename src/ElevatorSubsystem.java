@@ -1,20 +1,21 @@
 /**
  * Class represents the elevator car that is moving inside the shaft
- *
+ * 
  * @author Jaden Sutton
  * @author Adham Badawi
  * @version 1.00
  */
 
-public class ElevatorSubsystem implements Runnable{
+public class ElevatorSubsystem implements Runnable {
+    public enum Action { UP, DOWN, TOGGLE_DOORS, QUIT }
     private static final int MOVE_TIME = 8006;
     private static final int DOOR_OPEN_TIME = 3238;
+    private static final int STARTING_FLOOR = 1;
 
     private Scheduler scheduler;
     private static int elevatorIdCounter = 0;
     private int elevatorId;
-    private int currentFloor;
-    private ElevatorCall currentTrip;
+    private int currentFloor = STARTING_FLOOR;
 
     /**
      * Constructor for ElevatorSubsystem thread
@@ -23,44 +24,25 @@ public class ElevatorSubsystem implements Runnable{
     public ElevatorSubsystem(Scheduler scheduler) {
         elevatorId = elevatorIdCounter++;
         this.scheduler = scheduler;
-        currentFloor = 1;
-        currentTrip = null;
-    }
-
-    public int getElevatorId() {
-        return elevatorId;
-    }
-
-    public int getCurrentFloor() {
-        return currentFloor;
-    }
-
-    public ElevatorCall getCurrentTrip() {return currentTrip; }
-
-
-    public void setCurrentFloor(int currentFloor) {
-        this.currentFloor = currentFloor;
     }
 
     @Override
     public void run() {
-        boolean availableTrips = true;
-        while (availableTrips) {
-            currentTrip = scheduler.getNextTrip(this);
-            if (currentTrip == null){
-                availableTrips = false;
-                break;
-            }
-            while (currentTrip.getNextTargetFloor() != null) {
-                if (currentFloor < currentTrip.getNextTargetFloor()) {
+        Action action = scheduler.getNextAction(elevatorId, currentFloor);
+        while (action != Action.QUIT) {
+            switch (action) {
+                case UP:
                     move(1);
-                } else if (currentFloor > currentTrip.getNextTargetFloor()) {
+                    break;
+                case DOWN:
                     move(-1);
-                } else {
+                    break;
+                case TOGGLE_DOORS:
                     toggleDoors();
-                    currentTrip.arrivedAtFloor();
-                }
+                    break;
             }
+
+            action = scheduler.getNextAction(elevatorId, currentFloor);
         }
     }
 
@@ -78,14 +60,12 @@ public class ElevatorSubsystem implements Runnable{
     }
 
     public void move(int direction) {
-        currentFloor += direction;
         try {
             Thread.sleep(MOVE_TIME);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        currentFloor += direction;
         System.out.println(String.format("[ELEVATOR] Moved to floor %d", currentFloor));
-        scheduler.notifySchedulerElevatorDetected(currentFloor, elevatorId);
-        //scheduler.notifySchedulerElevatorDetected(elevatorId, currentFloor);
     }
 }

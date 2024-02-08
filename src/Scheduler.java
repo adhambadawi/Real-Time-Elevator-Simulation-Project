@@ -18,7 +18,8 @@ public class Scheduler {
     private List<Runnable>  FloorSubsystemNodes; //Represents the list of subFloorSubsystem threads.
     private List<Runnable>  elevatorSubsystemNodes; //Represents the list of elevatorSubsystem threads.
     private List<ElevatorCall> requestQueue; // queue of pending elevator calls
-    private List<ElevatorCall> activeTrips; // active elevator trips indexed by elevator id
+    private Map<Integer, Integer> elevatorCarPositions;
+    private Map<Integer, ElevatorCall> activeTrips;
 
     //Singleton object
     private static Scheduler scheduler;
@@ -28,7 +29,8 @@ public class Scheduler {
         FloorSubsystemNodes = new ArrayList<>();
         elevatorSubsystemNodes = new ArrayList<>();
         requestQueue = new ArrayList<>();
-        activeTrips = new ArrayList<>();
+        elevatorCarPositions = new HashMap<>();
+        activeTrips = new HashMap<>();
         requestsComplete = false;
     }
 
@@ -81,7 +83,7 @@ public class Scheduler {
     public synchronized void addRequest(ElevatorCall elevatorCall){
         //try to adding the coming request to an existing request
         System.out.println(String.format("[SCHEDULER] Received new elevator call: \n%s", elevatorCall));
-        for (ElevatorCall elevatorCallIterator: activeTrips) {
+        for (ElevatorCall elevatorCallIterator : activeTrips.values()) {
             if (elevatorCallIterator.mergeRequest(elevatorCall)){
                 return;
             }
@@ -95,64 +97,7 @@ public class Scheduler {
         requestsComplete = true;
     }
 
-    /** Used to notify the Schedular that an elevator cas was detected.
-     * Note: This method should only be used by an arrival sensor (ElevatorSubSystem).
-     *
-     * @param floorNumber: The floor number where the elevator car was detected
-     */
-    public synchronized void notifySchedulerElevatorDetected(Integer floorNumber, int elevatorSubsystemCarID){
-        //Notify the floors to reflect the new location that elevator car is approaching and going away
-        notifyFloorSubSystemNodesElevatorDetected(elevatorSubsystemCarID, floorNumber);
-
-        //Notify the elevator to reflect its location on the screen and if the elevator is supposed to stop on that floor reached then makes the motor stop moving,
-        // the floor light turn off, and the doors open.
-        // ElevatorSubsystem elevatorCarDetected = getElevatorCarWithTheGivenID(elevatorSubsystemCarID);
-    }
-
-    /**
-     * Get the elevator car with ID provided
-     * @param elevatorSubsystemCarID: the elevator car ID
-     * @return ElevatorSubsystem elevatorCar: the elevator car with id given.
-     */
-    private ElevatorSubsystem getElevatorCarWithTheGivenID(int elevatorSubsystemCarID){
-
-        ElevatorSubsystem targetedElevatorCar = null;
-
-        for (Runnable elevatorCar: elevatorSubsystemNodes){
-            if (elevatorCar instanceof ElevatorSubsystem){
-                ElevatorSubsystem elevator = (ElevatorSubsystem) elevatorCar;
-                if (elevator.getElevatorId() == elevatorSubsystemCarID){
-                    targetedElevatorCar = elevator;
-                    break;
-                }
-            }
-        }
-        //Make sure that the elevator with the given id was found
-        if (targetedElevatorCar ==  null){
-            System.out.println("ERROR::: ElevatorCar with the given ID: " + elevatorSubsystemCarID + " does not exit!");
-            return null;
-        }
-        return targetedElevatorCar;
-    }
-
-    /** Notify the list of subFloorSubsystemNodes with the location of the elevator car.
-     *
-     * @param floorNumber: The floor number where the elevator car was detected
-     */
-    private void notifyFloorSubSystemNodesElevatorDetected(int elevatorSubsystemCarID, int floorNumber){
-        for (Runnable floor : FloorSubsystemNodes){
-            if (floor instanceof FloorSubsystem){
-                FloorSubsystem floorSubSystem = (FloorSubsystem) floor;
-                floorSubSystem.updateElevatorCarDisplay(elevatorSubsystemCarID, floorNumber);
-            }
-        }
-    }
-
-    public synchronized ElevatorCall getNextTrip(ElevatorSubsystem caller) {
-        if (caller.getCurrentTrip() != null) {
-            activeTrips.remove(caller.getCurrentTrip());
-        }
-
+    private synchronized boolean assignTrip(int elevatorId) {
         while (requestQueue.size() == 0 && requestsComplete == false) {
             try {
                 wait();
@@ -162,20 +107,42 @@ public class Scheduler {
         }
 
         if (requestQueue.size() == 0) {
-            return null;
+            return false;
         }
 
         ElevatorCall nextRequest = requestQueue.remove(0);
-        nextRequest.setOwner(caller);
+        nextRequest.setCurrentFloor(elevatorCarPositions.get(elevatorId));
 
+        List<ElevatorCall> merged = new ArrayList<>();
         for (ElevatorCall request : requestQueue) {
             if (nextRequest.mergeRequest(request)) {
-                requestQueue.remove(request);
+                merged.add(request);
             }
         }
+        requestQueue.removeAll(merged);
 
-        activeTrips.add(nextRequest);
+        activeTrips.put(elevatorId, nextRequest);
 
-        return nextRequest;
+        return true;
+    }
+
+    public ElevatorSubsystem.Action getNextAction(int elevatorId, int currentFloor) {
+        elevatorCarPositions.put(elevatorId, currentFloor);
+
+        if ((activeTrips.get(elevatorId) == null || activeTrips.get(elevatorId).getNextTargetFloor() == null) && !assignTrip(elevatorId)) {
+            return ElevatorSubsystem.Action.QUIT;
+        }
+
+        ElevatorCall trip = activeTrips.get(elevatorId);
+
+        int prevTargetFloor = trip.getNextTargetFloor();
+        trip.setCurrentFloor(currentFloor);
+        if (currentFloor == prevTargetFloor) {
+            return ElevatorSubsystem.Action.TOGGLE_DOORS;
+        } else if (currentFloor < trip.getNextTargetFloor()) {
+            return ElevatorSubsystem.Action.UP;
+        } else {
+            return ElevatorSubsystem.Action.DOWN;
+        }
     }
 }
