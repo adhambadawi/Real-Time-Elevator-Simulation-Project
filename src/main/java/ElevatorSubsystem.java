@@ -3,7 +3,7 @@
  * 
  * @author Jaden Sutton
  * @author Adham Badawi
- * @version 1.00
+ * @version 2.00
  */
 
 public class ElevatorSubsystem implements Runnable {

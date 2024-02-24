@@ -8,6 +8,7 @@ import java.util.Map;
  * and performing elevator calls
  *
  * @author Jaden Sutton
+ * @version 2.00
  */
 public class FloorSubsystem implements Runnable {
     private Scheduler scheduler;
@@ -70,10 +71,10 @@ public class FloorSubsystem implements Runnable {
     /**
      * Update the elevator car display with the current location of an elevator car
      * @param elevatorId elevator car id
-     * @param currFloor current floor the elevator is on
+     * @param currentFloor current floor the elevator is on
      */
-    public void updateElevatorCarDisplay(int elevatorId, int currFloor) {
-        System.out.println("Updated the floor display to reflect floor : " + currFloor);
-        elevatorCarDisplay.put(elevatorId, currFloor);
+    public void updateElevatorCarDisplay(int elevatorId, int currentFloor) {
+        System.out.println(String.format("[FLOORSubSystem] Updated the floors display to reflect elevator car %s at floor %s", elevatorId, currentFloor));
+        elevatorCarDisplay.put(elevatorId, currentFloor);
     }
 }

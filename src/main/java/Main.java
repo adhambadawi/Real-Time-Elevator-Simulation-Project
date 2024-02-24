@@ -1,6 +1,6 @@
 public class Main {
     public static void main(String[] args) {
-        Scheduler scheduler = Scheduler.getScheduler(null);
+        Scheduler scheduler = Scheduler.getScheduler();
 
         //Elevator and floor threads
         Thread elevatorThread, floorThread;
