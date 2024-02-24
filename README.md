@@ -3,42 +3,42 @@
 This documentation provides an overview of the Elevator System Simulation project. The project simulates the operation of an elevator system within a building, handling elevator calls from different floors and directing the elevator to service these calls efficiently.
 
 # Overview
-The system comprises several key components:
+The system is composed of several critical components, now augmented with state machines for streamlined and efficient operation:
 
-ElevatorTrip: Represents a request for elevator service, including details such as the time of the call, the starting floor, the target floor(s), and the direction of travel.
+- **ElevatorTrip**: Represents a service request by detailing the call time, starting floor, target floor(s), and travel direction.
 
-Elevator: Manages the movement of the elevator, including opening and closing doors, moving between floors, and servicing ElevatorTrip requests.
+- **Elevator**: Controls the elevator's movements, including door operations and floor transitions. It follows a state machine model with states such as `UP`, `DOWN`, `TOGGLE_DOORS`, and `QUIT`, offering a more detailed simulation of elevator behaviors.
 
-FloorSubsystem: Simulates the arrival of passengers at various floors and generates ElevatorTrip requests based on input data.
+- **FloorSubsystem**: Generates `ElevatorTrip` requests by simulating passenger arrivals at different floors, based on input data.
 
-Scheduler: Coordinates between FloorSubsystem and Elevator, ensuring that elevator calls are serviced in an efficient manner. It operates on a singleton design pattern to ensure only one instance manages the elevator system.
+- **Scheduler**: Acts as the intermediary between the `FloorSubsystem` and `Elevator`, optimizing the processing of elevator calls. The Scheduler utilizes a state machine with states like `WAITING_FOR_REQUESTS`, `ASSIGNING_ACTIONS`, and `ADDING_ACTIONS` for dynamic call management and elevator instruction assignment.
 
 # Features
-Elevator Call Handling: Processes elevator calls with details such as timestamp, starting floor, and target floor, and direction.
+- **Elevator Call Handling**: Manages call details such as timestamp, starting and target floors, and direction.
 
-Elevator Movement Simulation: Simulates the elevator's movement between floors, including door opening and closing mechanisms.
+- **Elevator Movement Simulation**: Employs state machine logic for a realistic and efficient representation of elevator movements.
 
-Call Merging: Attempts to merge incoming elevator calls with existing ones to improve system efficiency.
+- **Call Merging**: Combines similar calls to enhance system efficiency.
 
-Floor Subsystem Simulation: Reads elevator call requests from an input file and simulates the time delay between calls.
+- **Floor Subsystem Simulation**: Interprets an input file to simulate time-delayed elevator call requests.
 
-Scheduler Coordination: Manages the queue of pending elevator calls and assigns them to the elevator, ensuring efficient service.
+- **Scheduler Coordination**: Uses a state machine for sophisticated elevator call queuing and task allocation.
 
 # Usage
 To use the simulation, compile and run the Scheduler class. The system will start processing elevator calls based on the predefined input file for floor calls and manage the elevator's movements accordingly.
 
 # Dependencies
-Java Development Kit (JDK)
-An input file containing elevator call requests (for FloorSubsystem)
+- Java Development Kit (JDK) with version 19 or higher 
+- An input file with elevator call requests for the FloorSubsystem
 
 
 # Input File Format for Elevator Calls
 The input file used by the FloorSubsystem to simulate the arrival of passengers and generate elevator calls follows a specific format. Each line in the file represents a single elevator call request and contains the following information:
 
-1. Timestamp: The time at which the elevator call is made, formatted as HH:mm:ss.
-2. Starting Floor: The floor number from which the call is made.
-3. Direction: Indicates whether the call is to go "Up" or "Down".
-4. Target Floor: The destination floor number.
+1. **Timestamp**: The call time, formatted as HH:mm:ss.
+2. **Starting Floor**: The originating floor number.
+3. **Direction**: Specifies the direction (`Up` or `Down`).
+4. **Target Floor**: The intended destination floor.
 
 # Example Input
 Below is an example of the input file content that the FloorSubsystem will parse:
@@ -80,6 +80,7 @@ Sameh Gawish
 7. Readme: Yasmina Younes
 
 # Version History
-1.00: Initial release
+- 1.00: Initial release
+- 1.01: New release includes state machine design for ElevatorSubsystem and Scheduler, enhancing system efficiency and realism.
 
 
