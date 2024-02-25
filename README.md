@@ -91,6 +91,12 @@ Sameh Gawish
 # UML Class Diagram
 ![UML Class Diagram](https://github.com/adhambadawi/SYSC3303Project/assets/89320833/0b00b6aa-6d68-45dc-9db0-5c595e20cd41)
 
+# State Machine Diagram
+![State-Machine-Diagram (1) drawio](https://github.com/adhambadawi/SYSC3303Project/assets/89320833/4b064fdd-bb26-408b-a114-4615df293267)
+
+# Sequence Diagram
+<img width="1918" alt="Sequence Diagram - Template (Community)" src="https://github.com/adhambadawi/SYSC3303Project/assets/89320833/1c1a9a38-6f0d-43da-8aa3-79037ce0ee61">
+
 # Version History
 - 1.00: Initial release
 - 1.01: New release includes state machine design for ElevatorSubsystem and Scheduler, enhancing system efficiency and realism.
