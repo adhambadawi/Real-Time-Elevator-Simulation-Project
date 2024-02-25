@@ -3,18 +3,20 @@
  * 
  * @author Jaden Sutton
  * @author Adham Badawi
- * @version 1.00
+ * @version 2.00
  */
 
 public class ElevatorSubsystem implements Runnable {
     public enum Action { UP, DOWN, TOGGLE_DOORS, QUIT }
     private static final int MOVE_TIME = 8006;
-    private static final int DOOR_OPEN_TIME = 3238;
+    protected static final int DOOR_OPEN_TIME = 3238;
     private static final int STARTING_FLOOR = 1;
 
     private Scheduler scheduler;
     private static int elevatorIdCounter = 0;
+
     private int elevatorId;
+
     private int currentFloor = STARTING_FLOOR;
 
     /**
@@ -24,6 +26,18 @@ public class ElevatorSubsystem implements Runnable {
     public ElevatorSubsystem(Scheduler scheduler) {
         elevatorId = elevatorIdCounter++;
         this.scheduler = scheduler;
+    }
+
+    public int getCurrentFloor() {
+        return currentFloor;
+    }
+
+    public void setCurrentFloor(int currentFloor) { //only for testing purposes
+        this.currentFloor = currentFloor;
+    }
+
+    public int getElevatorId() {
+        return elevatorId;
     }
 
     @Override

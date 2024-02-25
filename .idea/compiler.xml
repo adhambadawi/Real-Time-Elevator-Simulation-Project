@@ -9,8 +9,5 @@
         <module name="SYSC3303Project" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="SYSC3303Project" target="19" />
-    </bytecodeTargetLevel>
   </component>
 </project>
