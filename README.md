@@ -73,13 +73,14 @@ Sameh Gawish
 # Contributions
 1. Code Design and brainstorming: All members contributed to the code design.
 2. Floor Subsystem class: Jaden Sutton
-3. Elevator Subsystem class: Adham Badawi, Jaden Sutton, Amr Abdelazeem, Yasmina Younes
-4. Scheduler class: Amr Abdelazeem, Adham Badawi, Jaden Sutton, Dana El Sherif, Sameh Gawish
-5. Classes Testing: Adham Badawi, Yasmina Younes
-6. Sequence Diagram: Yasmina Younes
-7. UML Class Diagram: Yasmina Younes
-8. State Machine Diagram: Dana El Sherif
-9. Readme: Sameh Gawish
+3. Elevator call class: Jaden Sutton
+4. Elevator Subsystem class: Adham Badawi, Jaden Sutton, Amr Abdelazeem, Yasmina Younes, Dana El Sherif, Sameh Gawish
+5. Scheduler class: Amr Abdelazeem, Adham Badawi, Jaden Sutton, Dana El Sherif, Yasmina Younes, Sameh Gawish
+6. Classes Testing: Adham Badawi, Yasmina Younes
+7. Sequence Diagram: Yasmina Younes
+8. UML Class Diagram: Yasmina Younes
+9. State Machine Diagram: Dana El Sherif
+10. Readme: Sameh Gawish
 
 # State Machine Diagram
 ![State-Machine-Diagram (1) drawio](https://github.com/adhambadawi/SYSC3303Project/assets/89320833/4b064fdd-bb26-408b-a114-4615df293267)
