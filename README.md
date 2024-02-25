@@ -79,6 +79,12 @@ Sameh Gawish
 6. UML Class Diagram: Sameh Gawish
 7. Readme: Yasmina Younes
 
+# State Machine Diagram
+![State-Machine-Diagram (1) drawio](https://github.com/adhambadawi/SYSC3303Project/assets/89320833/4b064fdd-bb26-408b-a114-4615df293267)
+
+# Sequence Diagram
+<img width="1918" alt="Sequence Diagram - Template (Community)" src="https://github.com/adhambadawi/SYSC3303Project/assets/89320833/1c1a9a38-6f0d-43da-8aa3-79037ce0ee61">
+
 # Version History
 1.00: Initial release
 
