@@ -75,9 +75,11 @@ Sameh Gawish
 2. Floor Subsystem Code Implementation: Jaden Sutton
 3. Elevator Subsystem Code Implementation: Adham Badawi, Jaden Sutton, Amr Abdelazeem, Yasmina Younes
 4. Scheduler Code Implementation: Amr Abdelazeem, Adham Badawi, Jaden Sutton, Dana El Sherif, Sameh Gawish
-5. Sequence Diagram: Dana El Sherif
-6. UML Class Diagram: Sameh Gawish
-7. Readme: Yasmina Younes
+5. Testing: Adham Badawi, Yasmina Younes
+6. Sequence Diagram: Yasmina Younes
+7. UML Class Diagram: Yasmina Younes
+8. State Machine Diagram: Dana El Sherif
+9. Readme: Sameh Gawish
 
 # State Machine Diagram
 ![State-Machine-Diagram (1) drawio](https://github.com/adhambadawi/SYSC3303Project/assets/89320833/4b064fdd-bb26-408b-a114-4615df293267)
