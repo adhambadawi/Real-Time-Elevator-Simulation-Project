@@ -4,7 +4,12 @@
 * @version 2.00
 */
 
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
+import java.nio.ByteBuffer;
 import java.util.*;
+import java.io.IOException;
 
 /**
 * Scheduler states interface
@@ -130,6 +135,10 @@ public class Scheduler {
     private List<ElevatorCall> requestQueue; // queue of pending elevator calls
     private Map<Integer, Integer> elevatorCarPositions;
     private Map<Integer, ElevatorCall> activeTrips;
+    private DatagramPacket sendPacket, receivePacket;
+    private DatagramSocket sendReceiveSocket;
+
+
 
     //Singleton object
     private static Scheduler scheduler;
@@ -160,6 +169,7 @@ public class Scheduler {
     }
 
     /** Creates and returns Scheduler object upon check singularity.
+     * and calls method for listening for UDP packets
      * @return Agent object
      */
     public static Scheduler getScheduler(){
@@ -167,6 +177,7 @@ public class Scheduler {
             synchronized (Scheduler.class) {
                 scheduler = new Scheduler();
             }
+            scheduler.startListeningElevator();
         }
         return scheduler;
     }
@@ -251,7 +262,8 @@ public class Scheduler {
      * to be used by the Elevator Subsystem to notify the scheduler that it reached a floor,
      * so that scheduler provide the elevator car with the next elevator action
      * 
-     * @param elevatorCall: elevator request to be added
+     * @param elevatorId: elevator identification
+     * @param currentFloor: the current floor that the elevator in.
      */
     public synchronized ElevatorSubsystem.Action getNextAction(int elevatorId, int currentFloor) {
         //Delegate the task to the corresponding state 
@@ -287,4 +299,56 @@ public class Scheduler {
 
         return true;
     }
+
+    public void startListeningElevator() {
+        Thread listenerThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                listenForElevatorRequests();
+            }
+        });
+        listenerThread.start();
+    }
+
+
+    /**
+     * creats the recieving socket and packet, decodes them and get the needed data from the scheduler class then sends
+     * this data in a new packet to the same port
+     *
+     *
+     */
+    public void listenForElevatorRequests() {
+        try {
+
+            sendReceiveSocket = new DatagramSocket(69);
+            byte[] receiveData = new byte[Integer.BYTES * 2];
+
+            while (true) {
+                receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                sendReceiveSocket.receive(receivePacket);
+
+                ByteBuffer byteBuffer = ByteBuffer.wrap(receivePacket.getData());
+                int elevatorId = byteBuffer.getInt();
+                int currentFloor = byteBuffer.getInt();
+
+                ElevatorSubsystem.Action action = getNextAction(elevatorId, currentFloor);
+
+
+                byte[] sendData = action.name().getBytes("UTF-8");
+
+                sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
+                sendReceiveSocket.send(sendPacket);
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            // Ensure the socket is closed to release resources
+            if (sendReceiveSocket != null && !sendReceiveSocket.isClosed()) {
+                sendReceiveSocket.close();
+            }
+        }
+    }
+
 }
