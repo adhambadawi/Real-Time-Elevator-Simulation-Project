@@ -1,6 +1,7 @@
 /*
 * @author Jaden Sutton
 * @author Amr Abdelazeem
+* @author Sameh Gawish
 * @version 2.00
 */
 
@@ -300,6 +301,10 @@ public class Scheduler {
         return true;
     }
 
+    /**
+     * a running thread to keep the class in always state of listening to the ElevatorSubsystem
+     *
+     */
     public void startListeningElevator() {
         Thread listenerThread = new Thread(new Runnable() {
             @Override
@@ -312,7 +317,7 @@ public class Scheduler {
 
 
     /**
-     * creats the recieving socket and packet, decodes them and get the needed data from the scheduler class then sends
+     * creates the receiving socket and packet, decodes them and get the needed data from the scheduler class then sends
      * this data in a new packet to the same port
      *
      *
