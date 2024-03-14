@@ -5,7 +5,7 @@ public class Main {
         //Elevator and floor threads
         Thread elevatorThread, floorThread;
         ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem(scheduler);
-        FloorSubsystem floorSubSystem = new FloorSubsystem(scheduler, "ElevatorCalls");
+        FloorSubsystem floorSubSystem = new FloorSubsystem("ElevatorCalls");
         elevatorThread = new Thread(elevatorSubsystem);
         floorThread = new Thread(floorSubSystem);
 

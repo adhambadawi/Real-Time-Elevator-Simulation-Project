@@ -1,70 +1,96 @@
 import java.io.*;
+import java.net.*;
+import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
 /**
  * Class reposnisple for simulating arrival of passengers to the elevator
  * and performing elevator calls
  *
  * @author Jaden Sutton
+ * @author Dana El Sherif
  * @version 2.00
  */
 public class FloorSubsystem implements Runnable {
-    private Scheduler scheduler;
+    private DatagramSocket sendReceiveSocket;
     private String inputFilepath;
-    private Map<Integer, Integer> elevatorCarDisplay; // Used to store the current floors of each elevator for future display
+    private Map<Integer, Integer> elevatorCarDisplay;
 
-    /**
-     * Constructor for FloorSubsystem thread
-     * @param scheduler The elevator scheduler
-     * @param inputFilepath The path of the requests input file
-     */
-    public FloorSubsystem(Scheduler scheduler, String inputFilepath) {
-        this.scheduler = scheduler;
+    public FloorSubsystem(String inputFilepath) {
         this.inputFilepath = inputFilepath;
-        elevatorCarDisplay = new HashMap<Integer, Integer>();
+        elevatorCarDisplay = new HashMap<>();
+        try {
+            this.sendReceiveSocket = new DatagramSocket();
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
     }
 
-    /**
-     * Parse each request in the input file and forward it to the scheduler
-     */
+    @Override
     public void run() {
         BufferedReader reader;
         try {
             reader = new BufferedReader(new FileReader(inputFilepath));
-            String line = reader.readLine();
+            String line;
             Date firstTimestamp = null;
-            Date initialTime = new Date();
 
-            // Iterate through each line in input file
-            while (line != null) {
-                ElevatorCall elevatorCall = ElevatorCall.fromString(line);  // Get a new ElevatorCall object from the current input line
+            while ((line = reader.readLine()) != null) {
+                ElevatorCall elevatorCall = ElevatorCall.fromString(line);
+                System.out.println("[FLOOR SUBSYSTEM] Processing new elevator call: " + elevatorCall);
 
                 if (firstTimestamp == null) {
                     firstTimestamp = elevatorCall.getTimestamp();
                 } else {
-                    // Calculate the difference between the desired time between subsequent requests and the elapsed time of program execution
-                    Date currTimestamp = new Date();
-                    long timeDifference = (elevatorCall.getTimestamp().getTime() - firstTimestamp.getTime()) - (currTimestamp.getTime() - initialTime.getTime());
+
+                    long timeDifference = elevatorCall.getTimestamp().getTime() - firstTimestamp.getTime();
                     // Use the calculated difference to simulate time between requests
-                    if (timeDifference > 0) {
-                        try {
-                            Thread.sleep(timeDifference);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
+                    Thread.sleep(timeDifference);
                 }
 
-                scheduler.addRequest(elevatorCall); // Send request to scheduler
-                line = reader.readLine();
+                sendElevatorCall(elevatorCall);
             }
-            scheduler.signalRequestsComplete();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            if (sendReceiveSocket != null && !sendReceiveSocket.isClosed()) {
+                sendReceiveSocket.close();
+            }
+        }
+    }
 
-            reader.close();
+    /**
+     * creates the message based on elevator calls and sends the packet to port 23
+     *  @param call ElevatorCall from text file with requests
+     */
+    private void sendElevatorCall(ElevatorCall call) {
+        try {
+            ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+            String[] timeParts = sdf.format(call.getTimestamp()).split(":");
+            byteBuffer.putInt(Integer.parseInt(timeParts[0]));
+            byteBuffer.putInt(Integer.parseInt(timeParts[1]));
+            byteBuffer.putInt(Integer.parseInt(timeParts[2]));
+            byteBuffer.putInt(call.getStartingFloor());
+            byteBuffer.putInt(call.getDirection().equals("Up") ? 1 : 2);
+            byteBuffer.putInt(call.getTargetFloors().size());
+            for (Integer floor : call.getTargetFloors()) {
+                byteBuffer.putInt(floor);
+            }
+
+            byte[] sendData = byteBuffer.array();
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getLocalHost(), 23);
+
+            System.out.println("[FLOOR SUBSYSTEM] Sending elevator call to Scheduler: " + call);
+            sendReceiveSocket.send(sendPacket);
+        } catch (UnknownHostException e) {
+            System.err.println("Unknown host exception: " + e.getMessage());
+            e.printStackTrace();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.err.println("IO exception: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
