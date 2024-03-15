@@ -1,7 +1,11 @@
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,19 +41,24 @@ public class FloorSubsystem implements Runnable {
             Date firstTimestamp = null;
 
             while ((line = reader.readLine()) != null) {
-                ElevatorCall elevatorCall = ElevatorCall.fromString(line);
-                System.out.println("[FLOOR SUBSYSTEM] Processing new elevator call: " + elevatorCall);
-
+                String[] elevatorCallInfo = ElevatorCall.fromString(line);
+//                System.out.println("[FLOOR SUBSYSTEM] Processing new elevator call: " + elevatorCall);
+                SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+                Date timestamp;
+                try {
+                   timestamp = dateFormat.parse(elevatorCallInfo[0]);
+                } catch (ParseException e) {
+                    throw new RuntimeException(e);
+                }
                 if (firstTimestamp == null) {
-                    firstTimestamp = elevatorCall.getTimestamp();
+                    firstTimestamp = timestamp;
                 } else {
 
-                    long timeDifference = elevatorCall.getTimestamp().getTime() - firstTimestamp.getTime();
+                    long timeDifference = timestamp.getTime() - firstTimestamp.getTime();
                     // Use the calculated difference to simulate time between requests
                     Thread.sleep(timeDifference);
                 }
-
-                sendElevatorCall(elevatorCall);
+                sendElevatorCall(elevatorCallInfo);
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -64,26 +73,35 @@ public class FloorSubsystem implements Runnable {
      * creates the message based on elevator calls and sends the packet to port 23
      *  @param call ElevatorCall from text file with requests
      */
-    private void sendElevatorCall(ElevatorCall call) {
+    private void sendElevatorCall(String[] elevatorCallInfo) {
         try {
             ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
 
             SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-            String[] timeParts = sdf.format(call.getTimestamp()).split(":");
-            byteBuffer.putInt(Integer.parseInt(timeParts[0]));
-            byteBuffer.putInt(Integer.parseInt(timeParts[1]));
-            byteBuffer.putInt(Integer.parseInt(timeParts[2]));
-            byteBuffer.putInt(call.getStartingFloor());
-            byteBuffer.putInt(call.getDirection().equals("Up") ? 1 : 2);
-            byteBuffer.putInt(call.getTargetFloors().size());
-            for (Integer floor : call.getTargetFloors()) {
-                byteBuffer.putInt(floor);
+            Date timestamp;
+            try {
+                timestamp = sdf.parse(elevatorCallInfo[0]);
+
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
             }
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(timestamp);
+            // Extract hours, minutes, and seconds from the timestamp
+            int hours = calendar.get(Calendar.HOUR_OF_DAY);
+            int minutes = calendar.get(Calendar.MINUTE);
+            int seconds = calendar.get(Calendar.SECOND);
+
+            //timestamp parts
+            byteBuffer.putInt(hours);
+            byteBuffer.putInt(minutes);
+            byteBuffer.putInt(seconds);
+            byteBuffer.putInt(Integer.parseInt(elevatorCallInfo[1])); //starting floor
+            byteBuffer.putInt(Integer.parseInt(elevatorCallInfo[2])); // Target floor
+            byteBuffer.putInt(elevatorCallInfo[3].equals("Up") ? 1 : 2); //Direction
 
             byte[] sendData = byteBuffer.array();
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getLocalHost(), 23);
-
-            System.out.println("[FLOOR SUBSYSTEM] Sending elevator call to Scheduler: " + call);
             sendReceiveSocket.send(sendPacket);
         } catch (UnknownHostException e) {
             System.err.println("Unknown host exception: " + e.getMessage());

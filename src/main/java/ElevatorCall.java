@@ -1,5 +1,3 @@
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -134,34 +132,28 @@ public class ElevatorCall {
      * Construct a new ElevatorCall object using a string representation
      * @param repr
      */
-    public static ElevatorCall fromString(String repr) {
+    public static String[] fromString(String repr) {
         Pattern pattern = Pattern.compile(REGEX_PATTERN);
         Matcher matcher = pattern.matcher(repr);
 
-        Date timestamp;
-        int startingFloor;
-        int targetFloor;
+        String timestamp;
+        String startingFloor;
+        String targetFloor;
         String direction;
 
         // Verify that the input line matches the defined regex expression
         if (matcher.matches()) {
             // Parse timestamp, starting floor, direction, and target floor
-            SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-            try {
-                timestamp = dateFormat.parse(matcher.group(1).split(" ")[0]);
-            } catch (ParseException e) {
-                throw new RuntimeException(e);
-            }
-
-            startingFloor = Integer.valueOf(matcher.group(1).split(" ")[1]);
+            timestamp = matcher.group(1).split(" ")[0];
+            startingFloor = matcher.group(1).split(" ")[1];
             direction = matcher.group(1).split(" ")[2];
-            targetFloor = Integer.valueOf(matcher.group(1).split(" ")[3]);
+            targetFloor = matcher.group(1).split(" ")[3];
 
         } else {
             throw new RuntimeException("ElevatorCall string representation does not align with required format.");
         }
-
-        return new ElevatorCall(timestamp, startingFloor, targetFloor, direction);
+        String[] parsedElevatorCallInfo = {timestamp, startingFloor, targetFloor, direction};
+        return parsedElevatorCallInfo;
     }
 
     @Override

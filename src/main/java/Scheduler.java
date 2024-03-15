@@ -174,6 +174,8 @@ public class Scheduler {
                 scheduler = new Scheduler();
             }
             scheduler.listenToElevatorSubSystemCalls();
+            scheduler.listenToFloorSubSystemCalls();
+            
         }
         return scheduler;
     }
@@ -266,26 +268,26 @@ public class Scheduler {
      * a running thread to keep the class in always state of listening to the ElevatorSubsystem
      */
     public void listenToElevatorSubSystemCalls() {
-        Thread listenerThread = new Thread(new Runnable() {
+        Thread ElevatorSubsystemListenerThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                listenForElevatorSubsystemRequests();
+                listenToElevatorSubsystemRequests();
             }
         });
-        listenerThread.start();
+        ElevatorSubsystemListenerThread.start();
     }
 
     /**
      * a running thread to keep the class in always state of listening to the FloorSubsystem
      */
     public void listenToFloorSubSystemCalls() {
-        Thread listenerThread = new Thread(new Runnable() {
+        Thread floorSubsystemListenerThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                listenForFloorSubsystemRequests();
+                listenToFloorSubsystemRequests();
             }
         });
-        listenerThread.start();
+        floorSubsystemListenerThread.start();
     }
 
 
@@ -293,7 +295,7 @@ public class Scheduler {
      * creates the receiving socket and packet, decodes them and get the needed data from the scheduler class then sends
      * this data in a new packet to the same port
      */
-    public void listenForElevatorSubsystemRequests() {
+    public void listenToElevatorSubsystemRequests() {
         try {
             elevatorSendReceiveSocket = new DatagramSocket(69);
             byte[] receiveData = new byte[Integer.BYTES * 2];
@@ -301,7 +303,6 @@ public class Scheduler {
             while (true) {
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                 elevatorSendReceiveSocket.receive(receivePacket);
-
                 ByteBuffer byteBuffer = ByteBuffer.wrap(receivePacket.getData());
                 int elevatorId = byteBuffer.getInt();
                 int currentFloor = byteBuffer.getInt();
@@ -330,27 +331,35 @@ public class Scheduler {
      * creates the receiving socket and packet, decodes them and get the needed data from the scheduler class then sends
      * this data in a new packet to the same port
      */
-    public void listenForFloorSubsystemRequests() {
+    public void listenToFloorSubsystemRequests() {
         try {
-
             floorSendReceiveSocket = new DatagramSocket(23);
-            byte[] receiveData = new byte[Integer.BYTES * 2];
+            byte[] receiveData = new byte[Integer.BYTES * 10];
 
             while (true) {
+               
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                 floorSendReceiveSocket.receive(receivePacket);
-
                 ByteBuffer byteBuffer = ByteBuffer.wrap(receivePacket.getData());
-                int elevatorId = byteBuffer.getInt();
-                int currentFloor = byteBuffer.getInt();
+                //Decode the timestamp
+                int hours = byteBuffer.getInt();
+                int minutes = byteBuffer.getInt();
+                int seconds = byteBuffer.getInt();
+                //create a Date object of the decoded time
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(Calendar.HOUR_OF_DAY, hours);
+                calendar.set(Calendar.MINUTE, minutes);
+                calendar.set(Calendar.SECOND, seconds);
+                Date timestamp = calendar.getTime();
 
-                ElevatorSubsystem.Action action = getNextAction(elevatorId, currentFloor);
+                //Decode the starting floor, direction, and target floor
+                int startingFloor = byteBuffer.getInt();
+                int directionDecoded = byteBuffer.getInt();
+                String direction = (directionDecoded == 1) ? "Up" : "Down";
+                int targetFloor = byteBuffer.getInt();
+                ElevatorCall elevatorCall = new ElevatorCall(timestamp, startingFloor, targetFloor, direction);
 
-
-                byte[] sendData = action.name().getBytes("UTF-8");
-
-                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
-                floorSendReceiveSocket.send(sendPacket);
+                this.addRequest(elevatorCall);
             }
         } catch (SocketException e) {
             e.printStackTrace();
