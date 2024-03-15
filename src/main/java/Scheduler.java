@@ -354,9 +354,9 @@ public class Scheduler {
 
                 //Decode the starting floor, direction, and target floor
                 int startingFloor = byteBuffer.getInt();
+                int targetFloor = byteBuffer.getInt();
                 int directionDecoded = byteBuffer.getInt();
                 String direction = (directionDecoded == 1) ? "Up" : "Down";
-                int targetFloor = byteBuffer.getInt();
                 ElevatorCall elevatorCall = new ElevatorCall(timestamp, startingFloor, targetFloor, direction);
 
                 this.addRequest(elevatorCall);
