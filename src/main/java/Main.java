@@ -1,4 +1,5 @@
 public class Main {
+    private static final int NUM_ELEVATOR_CARS = 3;
     public static void main(String[] args) {
         Scheduler scheduler = Scheduler.getScheduler();
         //Elevator and floor threads
@@ -7,19 +8,18 @@ public class Main {
         FloorSubsystem floorSubSystem = new FloorSubsystem("ElevatorCalls");
         floorThread = new Thread(floorSubSystem);
 
-        //Elevator cars
-        ElevatorCar elevatorCar1 = new ElevatorCar(elevatorSubsystem);
-        ElevatorCar elevatorCar2 = new ElevatorCar(elevatorSubsystem);
-        ElevatorCar elevatorCar3 = new ElevatorCar(elevatorSubsystem);
-        //Elevator cars threads
-        elevatorCarThread1 = new Thread(elevatorCar1);
-       elevatorCarThread2 = new Thread(elevatorCar2);
-       elevatorCarThread3 = new Thread(elevatorCar3);
+        //Create elevator car threads
+        Thread[] elevatorCarThreads = new Thread[NUM_ELEVATOR_CARS];
+        for (int i = 0; i < NUM_ELEVATOR_CARS; i++) {
+            elevatorCarThreads[i] = new Thread(new ElevatorCar(elevatorSubsystem));
+        }
 
         //start the programs execution
         floorThread.start();
-        elevatorCarThread1.start();
-       elevatorCarThread2.start();
-    //    elevatorCarThread3.start();
+
+        //Start all elevator cars
+        for (int i = 0; i < NUM_ELEVATOR_CARS; i++) {
+            elevatorCarThreads[i].start();
+        }
     }
 }
