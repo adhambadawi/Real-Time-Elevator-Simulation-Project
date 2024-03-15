@@ -25,8 +25,9 @@ interface SchedulerState {
         context.setState("AddingRequest");
         
         for (ElevatorCall elevatorCallIterator : context.getActiveTrips().values()) {
+            System.out.println(elevatorCallIterator);
             if (elevatorCallIterator.mergeRequest(elevatorCall)) {
-                break; // Request merged, no need to add to the queue
+                return; // Request merged, no need to add to the queue
             }
         }
 
@@ -49,7 +50,6 @@ interface SchedulerState {
      */
     default ElevatorSubsystem.Action getNextAction(Scheduler context, int elevatorId, int currentFloor){
         context.setState("AssigningAction");
-
         context.getElevatorCarPositions().put(elevatorId, currentFloor);
 
         if ((context.getActiveTrips().get(elevatorId) == null || context.getActiveTrips().get(elevatorId).getNextTargetFloor() == null) && !context.assignTrip(elevatorId)) {
@@ -211,11 +211,11 @@ public class Scheduler {
      * @param elevatorCall: elevator request to be added
      */
     public synchronized void addRequest(ElevatorCall elevatorCall){
-        //Delegate the task to the corresponding state 
-        currentState.addRequest(this, elevatorCall);
-        
         //try to adding the coming request to an existing request
         System.out.println(String.format("[SCHEDULER] Received new elevator call: \n%s", elevatorCall));
+    
+        //Delegate the task to the corresponding state 
+        currentState.addRequest(this, elevatorCall);  
     }
 
     public void signalRequestsComplete() {

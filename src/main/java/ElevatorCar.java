@@ -36,6 +36,7 @@ public class ElevatorCar implements Runnable{
                     toggleDoors();
                     break;
             }
+            action = elevatorSubsystem.getAction(this.elevatorCarID);
         }
     }
 
