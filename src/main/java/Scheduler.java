@@ -131,13 +131,10 @@ class AssigningAction implements SchedulerState {
 public class Scheduler {
     private SchedulerState currentState; //represents the Scheduler current state
     private boolean requestsComplete;
-    private FloorSubsystem  floorSubsystem; //Represents the subFloorSubsystem thread.
-    private ElevatorSubsystem  elevatorSubsystem; //Represents the elevatorSubsystem.
     private List<ElevatorCall> requestsQueue; // queue of pending elevator calls
     private Map<Integer, Integer> elevatorCarPositions;
     private Map<Integer, ElevatorCall> activeTrips;
-    private DatagramPacket sendPacket, receivePacket;
-    private DatagramSocket sendReceiveSocket;
+    private DatagramSocket elevatorSendReceiveSocket, floorSendReceiveSocket;
 
 
 
@@ -205,40 +202,6 @@ public class Scheduler {
     public void setState(String stateName) {
         this.currentState = states.get(stateName);
     }
-    
-    /** Used to register SubFloorSubsystem nodes (floors) to the SubFloorSubsystemNodes arraylist
-     *  Uses dependency injection to avoid circular dependency
-     *
-     * @param subFloorSubsystemNode: SubFloorSubsystem node to be added
-     */
-    public void registerSubFloorSubsystem(Runnable floorSubsystem){
-
-        //ensure the node getting registered is of type SubFloorSubsystemNode
-        if (floorSubsystem instanceof FloorSubsystem && this.floorSubsystem == null){
-            this.floorSubsystem = (FloorSubsystem) floorSubsystem;
-        }
-        else{
-            System.out.println("The Object trying to be registered is of type: " + floorSubsystem.getClass() + "\nAllowed object type is 'SubFloorSubsystem'");
-        }
-    }
-
-    /** Used to register ElevatorSubsystem nodes (elevator cars) to the elevatorSubsystemNodes arraylist
-     *  Uses dependency injection to avoid circular dependency
-     *
-     * NOTE: Should only has a size of 1 for this iteration since there is only one Elevator car
-     *
-     * @param elevatorSubsystemNode: elevatorSubsystem node to be added
-     */
-    // public void registerElevatorSubsystemNode(Runnable elevatorSubsystemNode){
-
-    //     //ensure the node getting registered is of type SubFloorSubsystemNode
-    //     if (elevatorSubsystemNode instanceof ElevatorSubsystem){
-    //         elevatorSubsystemNode.add(elevatorSubsystemNode);
-    //     }
-    //     else{
-    //         System.out.println("The Object trying to be registered is of type: " + elevatorSubsystemNode.getClass() + "\nAllowed object type is 'ElevatorSubsystem'");
-    //     }
-    // }
 
     /**
      * Adding the request for the elevator call given to the suitable queue
@@ -312,6 +275,19 @@ public class Scheduler {
         listenerThread.start();
     }
 
+    /**
+     * a running thread to keep the class in always state of listening to the FloorSubsystem
+     */
+    public void listenToFloorSubSystemCalls() {
+        Thread listenerThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                listenForFloorSubsystemRequests();
+            }
+        });
+        listenerThread.start();
+    }
+
 
     /**
      * creates the receiving socket and packet, decodes them and get the needed data from the scheduler class then sends
@@ -319,13 +295,12 @@ public class Scheduler {
      */
     public void listenForElevatorSubsystemRequests() {
         try {
-
-            sendReceiveSocket = new DatagramSocket(69);
+            elevatorSendReceiveSocket = new DatagramSocket(69);
             byte[] receiveData = new byte[Integer.BYTES * 2];
 
             while (true) {
-                receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                sendReceiveSocket.receive(receivePacket);
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                elevatorSendReceiveSocket.receive(receivePacket);
 
                 ByteBuffer byteBuffer = ByteBuffer.wrap(receivePacket.getData());
                 int elevatorId = byteBuffer.getInt();
@@ -336,8 +311,8 @@ public class Scheduler {
 
                 byte[] sendData = action.name().getBytes("UTF-8");
 
-                sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
-                sendReceiveSocket.send(sendPacket);
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
+                elevatorSendReceiveSocket.send(sendPacket);
             }
         } catch (SocketException e) {
             e.printStackTrace();
@@ -345,8 +320,46 @@ public class Scheduler {
             e.printStackTrace();
         } finally {
             // Ensure the socket is closed to release resources
-            if (sendReceiveSocket != null && !sendReceiveSocket.isClosed()) {
-                sendReceiveSocket.close();
+            if (elevatorSendReceiveSocket != null && !elevatorSendReceiveSocket.isClosed()) {
+                elevatorSendReceiveSocket.close();
+            }
+        }
+    }
+
+    /**
+     * creates the receiving socket and packet, decodes them and get the needed data from the scheduler class then sends
+     * this data in a new packet to the same port
+     */
+    public void listenForFloorSubsystemRequests() {
+        try {
+
+            floorSendReceiveSocket = new DatagramSocket(23);
+            byte[] receiveData = new byte[Integer.BYTES * 2];
+
+            while (true) {
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                floorSendReceiveSocket.receive(receivePacket);
+
+                ByteBuffer byteBuffer = ByteBuffer.wrap(receivePacket.getData());
+                int elevatorId = byteBuffer.getInt();
+                int currentFloor = byteBuffer.getInt();
+
+                ElevatorSubsystem.Action action = getNextAction(elevatorId, currentFloor);
+
+
+                byte[] sendData = action.name().getBytes("UTF-8");
+
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
+                floorSendReceiveSocket.send(sendPacket);
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            // Ensure the socket is closed to release resources
+            if (floorSendReceiveSocket != null && !floorSendReceiveSocket.isClosed()) {
+                floorSendReceiveSocket.close();
             }
         }
     }

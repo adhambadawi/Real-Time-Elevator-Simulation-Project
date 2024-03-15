@@ -5,7 +5,7 @@ public class Main {
         //Elevator and floor threads
         Thread elevatorCarThread1, elevatorCarThread2, elevatorCarThread3, floorThread;
         ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
-        FloorSubsystem floorSubSystem = new FloorSubsystem(scheduler, "ElevatorCalls");
+        FloorSubsystem floorSubSystem = new FloorSubsystem("ElevatorCalls");
         floorThread = new Thread(floorSubSystem);
 
         //Elevator cars
@@ -16,11 +16,6 @@ public class Main {
         elevatorCarThread1 = new Thread(elevatorCar1);
         elevatorCarThread2 = new Thread(elevatorCar2);
         elevatorCarThread3 = new Thread(elevatorCar3);
-
-
-
-        //register the elevator and floor systems to listen the scheduler
-        scheduler.registerSubFloorSubsystem(floorSubSystem);
 
         //start the programs execution
         floorThread.start();
