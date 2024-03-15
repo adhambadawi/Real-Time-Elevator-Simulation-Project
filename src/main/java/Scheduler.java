@@ -1,10 +1,16 @@
 /*
 * @author Jaden Sutton
 * @author Amr Abdelazeem
-* @version 2.00
+* @author Sameh Gawish
+* @version 3.00
 */
 
 import java.util.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
+import java.nio.ByteBuffer;
+import java.io.IOException;
 
 /**
 * Scheduler states interface
@@ -26,7 +32,7 @@ interface SchedulerState {
 
         
         // Request not merged, add to the queue
-        context.getRequestQueue().add(elevatorCall);
+        context.getRequestsQueue().add(elevatorCall);
         context.notifyAll(); 
 
         // After handling, transition state back to waiting for a request state
@@ -125,11 +131,15 @@ class AssigningAction implements SchedulerState {
 public class Scheduler {
     private SchedulerState currentState; //represents the Scheduler current state
     private boolean requestsComplete;
-    private List<Runnable>  FloorSubsystemNodes; //Represents the list of subFloorSubsystem threads.
-    private List<Runnable>  elevatorSubsystemNodes; //Represents the list of elevatorSubsystem threads.
-    private List<ElevatorCall> requestQueue; // queue of pending elevator calls
+    private FloorSubsystem  floorSubsystem; //Represents the subFloorSubsystem thread.
+    private ElevatorSubsystem  elevatorSubsystem; //Represents the elevatorSubsystem.
+    private List<ElevatorCall> requestsQueue; // queue of pending elevator calls
     private Map<Integer, Integer> elevatorCarPositions;
     private Map<Integer, ElevatorCall> activeTrips;
+    private DatagramPacket sendPacket, receivePacket;
+    private DatagramSocket sendReceiveSocket;
+
+
 
     //Singleton object
     private static Scheduler scheduler;
@@ -141,9 +151,7 @@ public class Scheduler {
     Map<String, SchedulerState> states;
 
     Scheduler() {
-        FloorSubsystemNodes = new ArrayList<>();
-        elevatorSubsystemNodes = new ArrayList<>();
-        requestQueue = new ArrayList<>();
+        requestsQueue = Collections.synchronizedList(new ArrayList<>());
         elevatorCarPositions = new HashMap<>();
         activeTrips = new HashMap<>();
         requestsComplete = false;
@@ -160,6 +168,7 @@ public class Scheduler {
     }
 
     /** Creates and returns Scheduler object upon check singularity.
+     * and calls method for listening for UDP packets
      * @return Agent object
      */
     public static Scheduler getScheduler(){
@@ -167,12 +176,13 @@ public class Scheduler {
             synchronized (Scheduler.class) {
                 scheduler = new Scheduler();
             }
+            scheduler.listenToElevatorSubSystemCalls();
         }
         return scheduler;
     }
     
-    public List<ElevatorCall> getRequestQueue() {
-        return requestQueue;
+    public List<ElevatorCall> getRequestsQueue() {
+        return requestsQueue;
     }
 
     public Map<Integer, ElevatorCall> getActiveTrips() {
@@ -201,14 +211,14 @@ public class Scheduler {
      *
      * @param subFloorSubsystemNode: SubFloorSubsystem node to be added
      */
-    public void registerSubFloorSubsystemNode(Runnable subFloorSubsystemNode){
+    public void registerSubFloorSubsystem(Runnable floorSubsystem){
 
         //ensure the node getting registered is of type SubFloorSubsystemNode
-        if (subFloorSubsystemNode instanceof FloorSubsystem){
-            FloorSubsystemNodes.add(subFloorSubsystemNode);
+        if (floorSubsystem instanceof FloorSubsystem && this.floorSubsystem == null){
+            this.floorSubsystem = (FloorSubsystem) floorSubsystem;
         }
         else{
-            System.out.println("The Object trying to be registered is of type: " + subFloorSubsystemNode.getClass() + "\nAllowed object type is 'SubFloorSubsystem'");
+            System.out.println("The Object trying to be registered is of type: " + floorSubsystem.getClass() + "\nAllowed object type is 'SubFloorSubsystem'");
         }
     }
 
@@ -219,16 +229,16 @@ public class Scheduler {
      *
      * @param elevatorSubsystemNode: elevatorSubsystem node to be added
      */
-    public void registerElevatorSubsystemNode(Runnable elevatorSubsystemNode){
+    // public void registerElevatorSubsystemNode(Runnable elevatorSubsystemNode){
 
-        //ensure the node getting registered is of type SubFloorSubsystemNode
-        if (elevatorSubsystemNode instanceof ElevatorSubsystem){
-            elevatorSubsystemNodes.add(elevatorSubsystemNode);
-        }
-        else{
-            System.out.println("The Object trying to be registered is of type: " + elevatorSubsystemNode.getClass() + "\nAllowed object type is 'ElevatorSubsystem'");
-        }
-    }
+    //     //ensure the node getting registered is of type SubFloorSubsystemNode
+    //     if (elevatorSubsystemNode instanceof ElevatorSubsystem){
+    //         elevatorSubsystemNode.add(elevatorSubsystemNode);
+    //     }
+    //     else{
+    //         System.out.println("The Object trying to be registered is of type: " + elevatorSubsystemNode.getClass() + "\nAllowed object type is 'ElevatorSubsystem'");
+    //     }
+    // }
 
     /**
      * Adding the request for the elevator call given to the suitable queue
@@ -251,7 +261,8 @@ public class Scheduler {
      * to be used by the Elevator Subsystem to notify the scheduler that it reached a floor,
      * so that scheduler provide the elevator car with the next elevator action
      * 
-     * @param elevatorCall: elevator request to be added
+     * @param elevatorId: elevator identification
+     * @param currentFloor: the current floor that the elevator in.
      */
     public synchronized ElevatorSubsystem.Action getNextAction(int elevatorId, int currentFloor) {
         //Delegate the task to the corresponding state 
@@ -260,7 +271,7 @@ public class Scheduler {
 
 
     public synchronized boolean assignTrip(int elevatorId) {
-        while (requestQueue.size() == 0 && requestsComplete == false) {
+        while (requestsQueue.size() == 0 && requestsComplete == false) {
             try {
                 wait();
             } catch (InterruptedException e) {
@@ -268,23 +279,75 @@ public class Scheduler {
             }
         }
 
-        if (requestQueue.size() == 0) {
+        if (requestsQueue.size() == 0) {
             return false;
         }
 
-        ElevatorCall nextRequest = requestQueue.remove(0);
+        ElevatorCall nextRequest = requestsQueue.remove(0);
         nextRequest.setCurrentFloor(elevatorCarPositions.get(elevatorId));
 
         List<ElevatorCall> merged = new ArrayList<>();
-        for (ElevatorCall request : requestQueue) {
+        for (ElevatorCall request : requestsQueue) {
             if (nextRequest.mergeRequest(request)) {
                 merged.add(request);
             }
         }
-        requestQueue.removeAll(merged);
+        requestsQueue.removeAll(merged);
 
         activeTrips.put(elevatorId, nextRequest);
-
+        System.out.println("Elevator car " + elevatorId + " got assigned the request: " + nextRequest);
         return true;
+    }
+
+    /**
+     * a running thread to keep the class in always state of listening to the ElevatorSubsystem
+     */
+    public void listenToElevatorSubSystemCalls() {
+        Thread listenerThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                listenForElevatorSubsystemRequests();
+            }
+        });
+        listenerThread.start();
+    }
+
+
+    /**
+     * creates the receiving socket and packet, decodes them and get the needed data from the scheduler class then sends
+     * this data in a new packet to the same port
+     */
+    public void listenForElevatorSubsystemRequests() {
+        try {
+
+            sendReceiveSocket = new DatagramSocket(69);
+            byte[] receiveData = new byte[Integer.BYTES * 2];
+
+            while (true) {
+                receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                sendReceiveSocket.receive(receivePacket);
+
+                ByteBuffer byteBuffer = ByteBuffer.wrap(receivePacket.getData());
+                int elevatorId = byteBuffer.getInt();
+                int currentFloor = byteBuffer.getInt();
+
+                ElevatorSubsystem.Action action = getNextAction(elevatorId, currentFloor);
+
+
+                byte[] sendData = action.name().getBytes("UTF-8");
+
+                sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
+                sendReceiveSocket.send(sendPacket);
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            // Ensure the socket is closed to release resources
+            if (sendReceiveSocket != null && !sendReceiveSocket.isClosed()) {
+                sendReceiveSocket.close();
+            }
+        }
     }
 }

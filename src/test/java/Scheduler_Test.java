@@ -19,8 +19,8 @@ public class Scheduler_Test {
         ElevatorCall call = new ElevatorCall(new Date(), 1, 5, "Up");
         scheduler.addRequest(call);
 
-        assertFalse("Request queue should not be empty after adding a request", scheduler.getRequestQueue().isEmpty());
-        assertTrue("Request queue should contain the added request", scheduler.getRequestQueue().contains(call));
+        assertFalse("Request queue should not be empty after adding a request", scheduler.getRequestsQueue().isEmpty());
+        assertTrue("Request queue should contain the added request", scheduler.getRequestsQueue().contains(call));
     }
 
     @Test
@@ -70,7 +70,7 @@ public class Scheduler_Test {
         scheduler.addRequest(call);
 
         // Verify the request is added to the queue
-        assertFalse("Request queue should not be empty after adding a request", scheduler.getRequestQueue().isEmpty());
+        assertFalse("Request queue should not be empty after adding a request", scheduler.getRequestsQueue().isEmpty());
 
         // Verify the state transition to AddingRequest and then back to WaitingForRequest
         assertEquals("Scheduler state should be WaitingForRequest after adding a request", "WaitingForRequest", scheduler.getCurrentState().getClass().getSimpleName());

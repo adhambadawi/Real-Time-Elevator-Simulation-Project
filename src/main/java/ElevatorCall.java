@@ -177,6 +177,4 @@ public class ElevatorCall {
     public List<Integer> getTargetFloors() {
         return targetFloors;
     }
-
-
 }
