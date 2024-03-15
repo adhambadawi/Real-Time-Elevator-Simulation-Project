@@ -10,12 +10,12 @@ public class Main {
 
         //Elevator cars
         ElevatorCar elevatorCar1 = new ElevatorCar(elevatorSubsystem);
-        // ElevatorCar elevatorCar2 = new ElevatorCar(elevatorSubsystem);
-        // ElevatorCar elevatorCar3 = new ElevatorCar(elevatorSubsystem);
+        ElevatorCar elevatorCar2 = new ElevatorCar(elevatorSubsystem);
+        ElevatorCar elevatorCar3 = new ElevatorCar(elevatorSubsystem);
         //Elevator cars threads
         elevatorCarThread1 = new Thread(elevatorCar1);
-        // elevatorCarThread2 = new Thread(elevatorCar2);
-        // elevatorCarThread3 = new Thread(elevatorCar3);
+        elevatorCarThread2 = new Thread(elevatorCar2);
+        elevatorCarThread3 = new Thread(elevatorCar3);
 
 
 
@@ -25,7 +25,7 @@ public class Main {
         //start the programs execution
         floorThread.start();
         elevatorCarThread1.start();
-        // elevatorCarThread2.start();
-        // elevatorCarThread3.start();
+        elevatorCarThread2.start();
+        elevatorCarThread3.start();
     }
 }

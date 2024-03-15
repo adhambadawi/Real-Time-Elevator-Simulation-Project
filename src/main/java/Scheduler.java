@@ -30,7 +30,7 @@ interface SchedulerState {
             }
         }
 
-        
+
         // Request not merged, add to the queue
         context.getRequestsQueue().add(elevatorCall);
         context.notifyAll(); 
