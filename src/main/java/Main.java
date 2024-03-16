@@ -1,5 +1,5 @@
 public class Main {
-    private static final int NUM_ELEVATOR_CARS = 3;
+    private static final int NUM_ELEVATOR_CARS = 2;
     public static void main(String[] args) {
         Scheduler scheduler = Scheduler.getScheduler();
         //Elevator and floor threads

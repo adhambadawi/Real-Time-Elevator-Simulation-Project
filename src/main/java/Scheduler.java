@@ -9,6 +9,7 @@ import java.util.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.io.IOException;
 
@@ -298,22 +299,31 @@ public class Scheduler {
     public void listenToElevatorSubsystemRequests() {
         try {
             elevatorSendReceiveSocket = new DatagramSocket(69);
+            //timeout if no calls received for one minute 
+            elevatorSendReceiveSocket.setSoTimeout(60000);
             byte[] receiveData = new byte[Integer.BYTES * 2];
 
             while (true) {
-                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                elevatorSendReceiveSocket.receive(receivePacket);
-                ByteBuffer byteBuffer = ByteBuffer.wrap(receivePacket.getData());
-                int elevatorId = byteBuffer.getInt();
-                int currentFloor = byteBuffer.getInt();
+                try{
+                    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                    elevatorSendReceiveSocket.receive(receivePacket);
+                    ByteBuffer byteBuffer = ByteBuffer.wrap(receivePacket.getData());
+                    int elevatorId = byteBuffer.getInt();
+                    int currentFloor = byteBuffer.getInt();
 
-                ElevatorSubsystem.Action action = getNextAction(elevatorId, currentFloor);
+                    ElevatorSubsystem.Action action = getNextAction(elevatorId, currentFloor);
 
 
-                byte[] sendData = action.name().getBytes("UTF-8");
+                    byte[] sendData = action.name().getBytes("UTF-8");
 
-                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
-                elevatorSendReceiveSocket.send(sendPacket);
+                    DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
+                    elevatorSendReceiveSocket.send(sendPacket);
+                    // Resetting the timeout
+                    elevatorSendReceiveSocket.setSoTimeout(60000);
+                }
+                catch (SocketTimeoutException e){
+                    break;
+                }
             }
         } catch (SocketException e) {
             e.printStackTrace();
@@ -333,33 +343,43 @@ public class Scheduler {
      */
     public void listenToFloorSubsystemRequests() {
         try {
-            floorSendReceiveSocket = new DatagramSocket(23);
-            byte[] receiveData = new byte[Integer.BYTES * 10];
+                floorSendReceiveSocket = new DatagramSocket(23);
+                //timeout if no calls received for two minute 
+                floorSendReceiveSocket.setSoTimeout(120000);
+                byte[] receiveData = new byte[Integer.BYTES * 10];
+                
+                while (true) {
+                    try{
+                    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                    floorSendReceiveSocket.receive(receivePacket);
+                    ByteBuffer byteBuffer = ByteBuffer.wrap(receivePacket.getData());
+                    //Decode the timestamp
+                    int hours = byteBuffer.getInt();
+                    int minutes = byteBuffer.getInt();
+                    int seconds = byteBuffer.getInt();
+                    //create a Date object of the decoded time
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.set(Calendar.HOUR_OF_DAY, hours);
+                    calendar.set(Calendar.MINUTE, minutes);
+                    calendar.set(Calendar.SECOND, seconds);
+                    Date timestamp = calendar.getTime();
 
-            while (true) {
-               
-                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                floorSendReceiveSocket.receive(receivePacket);
-                ByteBuffer byteBuffer = ByteBuffer.wrap(receivePacket.getData());
-                //Decode the timestamp
-                int hours = byteBuffer.getInt();
-                int minutes = byteBuffer.getInt();
-                int seconds = byteBuffer.getInt();
-                //create a Date object of the decoded time
-                Calendar calendar = Calendar.getInstance();
-                calendar.set(Calendar.HOUR_OF_DAY, hours);
-                calendar.set(Calendar.MINUTE, minutes);
-                calendar.set(Calendar.SECOND, seconds);
-                Date timestamp = calendar.getTime();
+                    //Decode the starting floor, direction, and target floor
+                    int startingFloor = byteBuffer.getInt();
+                    int targetFloor = byteBuffer.getInt();
+                    int directionDecoded = byteBuffer.getInt();
+                    String direction = (directionDecoded == 1) ? "Up" : "Down";
+                    ElevatorCall elevatorCall = new ElevatorCall(timestamp, startingFloor, targetFloor, direction);
 
-                //Decode the starting floor, direction, and target floor
-                int startingFloor = byteBuffer.getInt();
-                int targetFloor = byteBuffer.getInt();
-                int directionDecoded = byteBuffer.getInt();
-                String direction = (directionDecoded == 1) ? "Up" : "Down";
-                ElevatorCall elevatorCall = new ElevatorCall(timestamp, startingFloor, targetFloor, direction);
-
-                this.addRequest(elevatorCall);
+                    this.addRequest(elevatorCall);
+                    // Resetting the timeout
+                    floorSendReceiveSocket.setSoTimeout(120000);
+                }
+                catch (SocketTimeoutException e) {
+                //signal that no more requests available 
+                this.signalRequestsComplete();
+                break;
+                }
             }
         } catch (SocketException e) {
             e.printStackTrace();
