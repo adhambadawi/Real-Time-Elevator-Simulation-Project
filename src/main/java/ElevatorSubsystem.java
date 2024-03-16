@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
  */
 
 public class ElevatorSubsystem{
-    public enum Action { UP, DOWN, TOGGLE_DOORS, QUIT }
+    public enum Action { UP, DOWN, TOGGLE_DOORS, IDLE, QUIT }
     private DatagramPacket sendPacket, receivePacket; // packets to be sent and received using UDP
     private DatagramSocket sendReceiveSocket; // the socket used to send and receive the packets
     private Map<Integer, ElevatorCar> elevatorCars; //list of register elevator cars
@@ -72,6 +72,7 @@ public class ElevatorSubsystem{
 
         try {
             sendReceiveSocket = new DatagramSocket();
+            sendReceiveSocket.setSoTimeout(5000);
         } catch (SocketException se) {
             se.printStackTrace();
         }
@@ -91,9 +92,25 @@ public class ElevatorSubsystem{
             sendReceiveSocket.send(sendPacket);
 
             receiveData = new byte[1024];
-             receivePacket = new DatagramPacket(receiveData, receiveData.length);
+            receivePacket = new DatagramPacket(receiveData, receiveData.length);
 
-            sendReceiveSocket.receive(receivePacket);
+            int attempts = 0;
+            boolean receivedResponse = false;
+            while (attempts++ < 3 && !receivedResponse) {
+                try {
+                    sendReceiveSocket.receive(receivePacket);
+                    receivedResponse = true;
+                } catch (SocketTimeoutException ste) {
+                    System.out.println("[ELEVATOR SUBSYSTEM] Timeout when attempting to receive next action from scheduler");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    System.exit(1);
+                }
+            }
+
+            if (!receivedResponse) {
+                throw new RuntimeException("Failed to receive next action from scheduler after 3 attempts.");
+            }
 
             // get the data and Convert string back to enum
             String receivedText = new String(receivePacket.getData(), 0, receivePacket.getLength());

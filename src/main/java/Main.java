@@ -3,7 +3,7 @@ public class Main {
     public static void main(String[] args) {
         Scheduler scheduler = Scheduler.getScheduler();
         //Elevator and floor threads
-        Thread elevatorCarThread1, elevatorCarThread2, elevatorCarThread3, floorThread;
+        Thread floorThread;
         ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
         FloorSubsystem floorSubSystem = new FloorSubsystem("ElevatorCalls");
         floorThread = new Thread(floorSubSystem);

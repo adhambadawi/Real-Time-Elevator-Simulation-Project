@@ -35,6 +35,14 @@ public class ElevatorCar implements Runnable{
                 case TOGGLE_DOORS:
                     toggleDoors();
                     break;
+                case IDLE:
+                    try {
+                        // Sleep for 5 seconds before requesting again to conserve bandwidth
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    break;
             }
             action = elevatorSubsystem.getAction(this.elevatorCarID);
         }

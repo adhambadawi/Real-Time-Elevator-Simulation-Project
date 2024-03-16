@@ -56,8 +56,12 @@ interface SchedulerState {
         if ((context.getActiveTrips().get(elevatorId) == null || context.getActiveTrips().get(elevatorId).getNextTargetFloor() == null) && !context.assignTrip(elevatorId)) {
             //retrieving the original state for the Scheduler: WaitingForRequest state (IDLE)
             //trigging event (assigned action)
-            context.setState("WaitingForRequest");  
-            return ElevatorSubsystem.Action.QUIT;
+            context.setState("WaitingForRequest");
+            if (context.isRequestsComplete()) {
+                return ElevatorSubsystem.Action.QUIT;
+            } else {
+                return ElevatorSubsystem.Action.IDLE;
+            }
         }
 
         ElevatorCall trip = context.getActiveTrips().get(elevatorId);
@@ -67,7 +71,7 @@ interface SchedulerState {
         ElevatorSubsystem.Action action;
 
         if (currentFloor == prevTargetFloor) {
-             action = ElevatorSubsystem.Action.TOGGLE_DOORS;
+            action = ElevatorSubsystem.Action.TOGGLE_DOORS;
         } else if (currentFloor < trip.getNextTargetFloor()) {
             action = ElevatorSubsystem.Action.UP;
         } else {
@@ -237,14 +241,6 @@ public class Scheduler {
 
 
     public synchronized boolean assignTrip(int elevatorId) {
-        while (requestsQueue.size() == 0 && requestsComplete == false) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
         if (requestsQueue.size() == 0) {
             return false;
         }
