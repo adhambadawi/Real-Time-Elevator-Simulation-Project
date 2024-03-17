@@ -10,12 +10,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 /**
- * Class reposnisple for simulating arrival of passengers to the elevator
+ * Class responsible for simulating arrival of passengers to the elevator
  * and performing elevator calls
  *
  * @author Jaden Sutton
  * @author Dana El Sherif
  * @author Adham Badawi
+ * @author Sameh Gawish
+ * @author Amr Abdelazeem
  *
  * @version 3.00
  */
@@ -23,15 +25,19 @@ public class FloorSubsystem implements Runnable {
     private DatagramSocket sendReceiveSocket;
     private String inputFilepath;
     private Map<Integer, Integer> elevatorCarDisplay;
+    private DatagramSocket ReceiveSocket;
+    private DatagramPacket receivePacket;
 
     public FloorSubsystem(String inputFilepath) {
         this.inputFilepath = inputFilepath;
         elevatorCarDisplay = new HashMap<>();
         try {
             this.sendReceiveSocket = new DatagramSocket();
+
         } catch (SocketException e) {
             e.printStackTrace();
         }
+        listenToSchedulerForDisplay();
     }
 
     @Override
@@ -123,4 +129,53 @@ public class FloorSubsystem implements Runnable {
         System.out.println(String.format("[FLOORSubSystem] Updated the floors display to reflect elevator car %s at floor %s", elevatorId, currentFloor));
         elevatorCarDisplay.put(elevatorId, currentFloor);
     }
+
+    public void listenToSchedulerForDisplay() {
+        Thread SchedulerListenerThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ReceiveDisplayInfo();
+            }
+        });
+        SchedulerListenerThread.start();
+
+
+
+    }
+
+    public void ReceiveDisplayInfo(){
+        try {
+            ReceiveSocket = new DatagramSocket(80);
+            ReceiveSocket.setSoTimeout(10000);
+            byte[] receiveData = new byte[Integer.BYTES * 2];
+
+            while (true) {
+                try {
+
+                    receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                    ReceiveSocket.receive(receivePacket);
+                    ByteBuffer byteBuffer = ByteBuffer.wrap(receivePacket.getData());
+
+                    int elevatorId = byteBuffer.getInt();
+                    int currentFloor = byteBuffer.getInt();
+
+                    // commented the displaying part for this iteration
+                    // updateElevatorCarDisplay(elevatorId, currentFloor);
+                } catch (SocketTimeoutException e) {
+                    break;
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            // Ensure the socket is closed to release resources
+            if (ReceiveSocket != null && !ReceiveSocket.isClosed()) {
+                ReceiveSocket.close();
+            }
+        }
+    }
+
+
 }

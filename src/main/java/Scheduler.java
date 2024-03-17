@@ -6,6 +6,7 @@
 */
 
 import java.util.*;
+import java.net.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
@@ -139,7 +140,7 @@ public class Scheduler {
     private List<ElevatorCall> requestsQueue; // queue of pending elevator calls
     private Map<Integer, Integer> elevatorCarPositions;
     private Map<Integer, ElevatorCall> activeTrips;
-    private DatagramSocket elevatorSendReceiveSocket, floorSendReceiveSocket;
+    private DatagramSocket elevatorSendReceiveSocket, floorSendReceiveSocket, floorSendSocket;
 
 
 
@@ -307,6 +308,8 @@ public class Scheduler {
                     int elevatorId = byteBuffer.getInt();
                     int currentFloor = byteBuffer.getInt();
 
+                    SendDisplayInfoToFloorSubsystem(elevatorId, currentFloor);
+
                     ElevatorSubsystem.Action action = getNextAction(elevatorId, currentFloor);
 
 
@@ -385,6 +388,37 @@ public class Scheduler {
             // Ensure the socket is closed to release resources
             if (floorSendReceiveSocket != null && !floorSendReceiveSocket.isClosed()) {
                 floorSendReceiveSocket.close();
+            }
+        }
+    }
+
+    public void SendDisplayInfoToFloorSubsystem(int elevatorCarID, int currentFloor){
+        try {
+            floorSendSocket = new DatagramSocket();
+            floorSendSocket.setSoTimeout(60000);
+        } catch (SocketException se) {
+            se.printStackTrace();
+        }
+        byte[] sendData; // data to be sent
+
+        try {
+            ByteBuffer byteBuffer = ByteBuffer.allocate(Integer.BYTES * 2);
+            byteBuffer.putInt(elevatorCarID);
+            byteBuffer.putInt(currentFloor);
+            sendData = byteBuffer.array();
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length,
+                    InetAddress.getLocalHost(), 80);
+
+            floorSendSocket.send(sendPacket);
+
+        } catch (SocketException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            // Ensure the socket is closed to release resources
+            if (floorSendSocket != null && !floorSendSocket.isClosed()) {
+                floorSendSocket.close();
             }
         }
     }
