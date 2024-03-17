@@ -8,15 +8,22 @@ import java.util.regex.Pattern;
  * Custom data structure used to represent an elevator call
  *
  * @author Jaden Sutton
+ * @author Adham Badawi
+ *
+ * @version 3.00
  */
 public class ElevatorCall {
     private static final String REGEX_PATTERN = "([0-9]{2}:[0-9]{2}:[0-9]{2} \\d+ \\w+ \\d+)";
+
     private final Date timestamp;
     private final int startingFloor;
     private List<Integer> targetFloors;
 
     private final String direction;
     private Integer currentFloor;
+
+    private int passengersTotalWeight;
+    private static final int ELEVATOR_WEIGHT_LIMIT = 500;
 
     /**
      * Construct a new ElevatorCall object
@@ -30,6 +37,7 @@ public class ElevatorCall {
         this.timestamp = timestamp;
         this.startingFloor = startingFloor;
         this.direction = direction;
+        this.passengersTotalWeight = new Passenger().getPassengerWeight();
 
         currentFloor = null;
 
@@ -68,6 +76,10 @@ public class ElevatorCall {
         }
     }
 
+    public int getPassengersTotalWeight() {
+        return passengersTotalWeight;
+    }
+
     /**
      * Attempt to merge an incoming request with this request
      * @param request the incoming request
@@ -81,6 +93,8 @@ public class ElevatorCall {
         insertTargetFloor(request.getStartingFloor());
         request.setCurrentFloor(request.getStartingFloor());
         insertTargetFloor(request.getNextTargetFloor());
+
+        this.passengersTotalWeight += request.getPassengersTotalWeight();
 
         return true;
     }
@@ -105,6 +119,9 @@ public class ElevatorCall {
             return false;
         } else if (direction.equals("Down") && currentFloor <= request.getStartingFloor() && (getNextTargetFloor() == null || getNextTargetFloor() < request.getStartingFloor())) {
             return false;
+        } else if (passengersTotalWeight + request.getPassengersTotalWeight() > ELEVATOR_WEIGHT_LIMIT ){
+            System.out.println("Elevator Car capacity reached");
+            return  false;
         }
 
         return true;
@@ -128,6 +145,10 @@ public class ElevatorCall {
         }
     }
 
+    /**
+     * Construct a new ElevatorCall object using a string representation
+     * @param repr
+     */
     /**
      * Construct a new ElevatorCall object using a string representation
      * @param repr
@@ -156,14 +177,11 @@ public class ElevatorCall {
         return parsedElevatorCallInfo;
     }
 
+
     @Override
     public String toString() {
-        return "ElevatorCall{" +
-                "RequestTime=" + timestamp +
-                ", StartingFloor=" + startingFloor +
-                ", direction='" + direction + '\'' +
-                ", TargetFloor=" + targetFloors +
-                '}';
+        return String.format("ElevatorCall{RequestTime=%s, StartingFloor=%d, TargetFloor=%s, direction='%s'}",
+                timestamp, startingFloor, targetFloors, direction);
     }
 
     public List<Integer> getTargetFloors() {
