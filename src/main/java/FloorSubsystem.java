@@ -160,7 +160,7 @@ public class FloorSubsystem implements Runnable {
                     int currentFloor = byteBuffer.getInt();
 
                     // commented the displaying part for this iteration
-                    updateElevatorCarDisplay(elevatorId, currentFloor);
+                    // updateElevatorCarDisplay(elevatorId, currentFloor);
                 } catch (SocketTimeoutException e) {
                     break;
                 }
