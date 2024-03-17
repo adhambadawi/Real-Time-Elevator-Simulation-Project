@@ -1,6 +1,7 @@
 /**Class represents an elevator car under the elevator subsystem
  * 
  * @author Amr Abdelazeem
+ * @author Jaden Sutton
  * @version 1.0
 */
 public class ElevatorCar implements Runnable{

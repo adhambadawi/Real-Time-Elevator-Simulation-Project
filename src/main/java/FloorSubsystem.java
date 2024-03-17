@@ -71,7 +71,7 @@ public class FloorSubsystem implements Runnable {
 
     /**
      * creates the message based on elevator calls and sends the packet to port 23
-     *  @param call ElevatorCall from text file with requests
+     *  @param elevatorCallInfo ElevatorCall from text file with requests
      */
     private void sendElevatorCall(String[] elevatorCallInfo) {
         try {
