@@ -16,7 +16,8 @@ import java.util.Map;
  * @author Jaden Sutton
  * @author Dana El Sherif
  * @author Adham Badawi
- *  @author Sameh Gawish
+ * @author Sameh Gawish
+ * @author Amr Abdelazeem
  *
  * @version 3.00
  */
@@ -119,7 +120,7 @@ public class FloorSubsystem implements Runnable {
         }
     }
 
-    /**z
+    /**
      * Update the elevator car display with the current location of an elevator car
      * @param elevatorId elevator car id
      * @param currentFloor current floor the elevator is on
@@ -159,7 +160,7 @@ public class FloorSubsystem implements Runnable {
                     int currentFloor = byteBuffer.getInt();
 
                     // commented the displaying part for this iteration
-                    //updateElevatorCarDisplay(elevatorId, currentFloor);
+                    updateElevatorCarDisplay(elevatorId, currentFloor);
                 } catch (SocketTimeoutException e) {
                     break;
                 }
