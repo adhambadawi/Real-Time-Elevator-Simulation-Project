@@ -1,5 +1,13 @@
 import java.util.Random;
 
+/**
+ * Class to represent the Passenger Object
+ *
+ * @author Adham Badawi
+ *
+ * @version 1.00
+ */
+
 public class Passenger {
     private int passengerWeight;
 

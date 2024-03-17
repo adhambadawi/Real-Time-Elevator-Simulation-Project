@@ -8,6 +8,9 @@ import java.util.regex.Pattern;
  * Custom data structure used to represent an elevator call
  *
  * @author Jaden Sutton
+ * @author Adham Badawi
+ *
+ * @version 3.00
  */
 public class ElevatorCall {
     private static final String REGEX_PATTERN = "([0-9]{2}:[0-9]{2}:[0-9]{2} \\d+ \\w+ \\d+)";
