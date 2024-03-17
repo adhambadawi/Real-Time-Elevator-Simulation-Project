@@ -16,6 +16,7 @@ import java.util.Map;
  * @author Jaden Sutton
  * @author Dana El Sherif
  * @author Adham Badawi
+ *  @author Sameh Gawish
  *
  * @version 3.00
  */
@@ -35,7 +36,7 @@ public class FloorSubsystem implements Runnable {
         } catch (SocketException e) {
             e.printStackTrace();
         }
-        listenToSchedularForDisplay();
+        listenToSchedulerForDisplay();
     }
 
     @Override
@@ -128,14 +129,14 @@ public class FloorSubsystem implements Runnable {
         elevatorCarDisplay.put(elevatorId, currentFloor);
     }
 
-    public void listenToSchedularForDisplay() {
-        Thread SchedularListenerThread = new Thread(new Runnable() {
+    public void listenToSchedulerForDisplay() {
+        Thread SchedulerListenerThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 ReceiveDisplayInfo();
             }
         });
-        SchedularListenerThread.start();
+        SchedulerListenerThread.start();
 
 
 
@@ -144,7 +145,7 @@ public class FloorSubsystem implements Runnable {
     public void ReceiveDisplayInfo(){
         try {
             ReceiveSocket = new DatagramSocket(80);
-            ReceiveSocket.setSoTimeout(60000);
+            ReceiveSocket.setSoTimeout(10000);
             byte[] receiveData = new byte[Integer.BYTES * 2];
 
             while (true) {
@@ -157,7 +158,7 @@ public class FloorSubsystem implements Runnable {
                     int elevatorId = byteBuffer.getInt();
                     int currentFloor = byteBuffer.getInt();
 
-                    // for displaying the info in the terminal and commented out for this iteration
+                    // commented the displaying part for this iteration
                     //updateElevatorCarDisplay(elevatorId, currentFloor);
                 } catch (SocketTimeoutException e) {
                     break;

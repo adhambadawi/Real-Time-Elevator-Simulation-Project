@@ -399,7 +399,6 @@ public class Scheduler {
         } catch (SocketException se) {
             se.printStackTrace();
         }
-
         byte[] sendData; // data to be sent
 
         try {
@@ -407,7 +406,6 @@ public class Scheduler {
             byteBuffer.putInt(elevatorCarID);
             byteBuffer.putInt(currentFloor);
             sendData = byteBuffer.array();
-
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length,
                     InetAddress.getLocalHost(), 80);
 
