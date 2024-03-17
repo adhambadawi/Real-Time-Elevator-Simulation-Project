@@ -42,8 +42,15 @@ The input file used by the FloorSubsystem to simulate the arrival of passengers 
 
 # Example Input
 Below is an example of the input file content that the FloorSubsystem will parse:
-14:05:15 1 Up 10
-14:05:20 5 Up 8
+14:04:50 1 Up 10
+14:04:55 5 Up 8
+14:04:55 5 Up 8
+14:04:55 5 Up 8
+14:04:55 5 Up 8
+14:04:55 5 Up 8
+14:04:55 5 Up 8
+14:04:55 5 Up 8
+14:04:55 5 Up 8
 14:05:25 6 Down 4
 14:05:30 2 Up 7
 14:05:35 1 Up 2
@@ -51,8 +58,8 @@ Below is an example of the input file content that the FloorSubsystem will parse
 14:05:45 1 Up 6
 
 Input File Line Breakdown:
-14:05:15 1 Up 10: At 14:05:15, a call is made from floor 1 to go up to floor 10.
-14:05:20 5 Up 8: At 14:05:20, a call is made from floor 5 to go up to floor 8.
+14:04:50 1 Up 10: At 14:05:15, a call is made from floor 1 to go up to floor 10.
+14:04:55 5 Up 8: At 14:05:20, 8 calls are made from floor 5 to go up to floor 8.
 14:05:25 6 Down 4: At 14:05:25, a call is made from floor 6 to go down to floor 4.
 14:05:30 2 Up 7: At 14:05:30, a call is made from floor 2 to go up to floor 7.
 14:05:35 1 Up 2: At 14:05:35, a call is made from floor 1 to go up to floor 2.
@@ -71,16 +78,17 @@ Yasmina Younes
 Sameh Gawish
 
 # Contributions
-1. Code Design and brainstorming: All members contributed to the code design.
-2. Floor Subsystem class: Jaden Sutton
-3. Elevator call class: Jaden Sutton
-4. Elevator Subsystem class: Adham Badawi, Jaden Sutton, Amr Abdelazeem, Yasmina Younes, Dana El Sherif, Sameh Gawish
-5. Scheduler class: Amr Abdelazeem, Adham Badawi, Jaden Sutton, Dana El Sherif, Yasmina Younes, Sameh Gawish
-6. Classes Testing: Adham Badawi, Yasmina Younes
-7. Sequence Diagram: Yasmina Younes
-8. UML Class Diagram: Yasmina Younes
-9. State Machine Diagram: Dana El Sherif
-10. Readme: Sameh Gawish
+1. Scheduler UDP: Sameh Gawish, Jaden Sutton
+2. ElevatorSubsystem UDP: Sameh Gawish, Yasmina Younes
+3. FloorSubsystem UDP: Dana El Sherif, Amr Abdelazeem
+4. Scheduler Multiple Elevators: Jaden Sutton, Amr Abdelazeem
+5. ElevatorSybsystem Multiple Elevators: Jaden Sutton, Amr Abdelazeem, Adham Badawi
+6. ElevatorCar: Jaden Sutton, Amr Abdelazeem
+7. Passenger class: Adham Badawi
+8. Assuring the total weight of passengers in an elevator car doesn't exceed 500 KGs: Adham Badawi, Yasmina Younes
+9. Testing: Adham Badawi, Yasmina Younes, Dana El Sherif
+10. Diagrams: Dana El Sherif, Yasmina Younes
+11. Readme:Yasmina Younes
 
 # State Machine Diagram
 ![State-Machine-Diagram (1) drawio](https://github.com/adhambadawi/SYSC3303Project/assets/89320833/4b064fdd-bb26-408b-a114-4615df293267)
@@ -99,6 +107,6 @@ Sameh Gawish
 
 # Version History
 - 1.00: Initial release
-- 1.01: New release includes state machine design for ElevatorSubsystem and Scheduler, enhancing system efficiency and realism.
+- 3.00: The new release includes dividing the system into separate programs communicating via UDP and creating multiple elevator cars that operate independently. We have also added a weight limit for each elevator car that we are assuring is not exceeded.
 
 

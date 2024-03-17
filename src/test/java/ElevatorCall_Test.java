@@ -41,6 +41,7 @@ public class ElevatorCall_Test {
         elevatorCallDown = new ElevatorCall(timestamp, 10, 5, "Down");
     }
 
+
     @Test
     public void testElevatorCallConstruction() {
         assertNotNull(elevatorCall);
@@ -99,17 +100,15 @@ public class ElevatorCall_Test {
         assertFalse(elevatorCall.mergeRequest(incompatibleDirectionCall));
     }
 
+
     @Test
     public void testFromString() {
-        String callString = "14:05:15 1 Up 10";
-        ElevatorCall fromStringCall = ElevatorCall.fromString(callString);
-
-        assertNotNull(fromStringCall);
-        assertEquals(timestamp, fromStringCall.getTimestamp());
-        assertEquals(1, fromStringCall.getStartingFloor());
-        assertTrue(fromStringCall.getTargetFloors().contains(10));
-        assertEquals("Up", fromStringCall.getDirection());
+        String input = "14:05:15 1 Up 10";
+        String[] expected = {"14:05:15", "1", "10", "Up"};
+        String[] result = ElevatorCall.fromString(input);
+        assertArrayEquals("The parsed array should match the expected output", expected, result);
     }
+
 
     @Test
     public void testInvalidFromStringFormat() {
@@ -275,5 +274,5 @@ public class ElevatorCall_Test {
                     targetFloorsDown.get(i) > targetFloorsDown.get(i + 1));
         }
     }
-    // Consider adding more tests to cover edge cases in mergeRequest, especially around direction checks and floor comparisons.
+
 }
