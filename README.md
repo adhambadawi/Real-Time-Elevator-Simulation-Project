@@ -7,7 +7,7 @@ The system is composed of several critical components, now augmented with state 
 
 - **ElevatorTrip**: Represents a service request by detailing the call time, starting floor, target floor(s), and travel direction.
 
-- **Elevator**: Controls the elevator's movements, including door operations and floor transitions. It follows a state machine model with states such as `UP`, `DOWN`, `TOGGLE_DOORS`, and `QUIT`, offering a more detailed simulation of elevator behaviors.
+- **Elevator**: Controls the elevator's movements, including door operations and floor transitions. It follows a state machine model with states such as `UP`, `DOWN`, `TOGGLE_DOORS`, `IDLE`, and `QUIT`, offering a more detailed simulation of elevator behaviors.
 
 - **FloorSubsystem**: Generates `ElevatorTrip` requests by simulating passenger arrivals at different floors, based on input data.
 
@@ -43,13 +43,6 @@ The input file used by the FloorSubsystem to simulate the arrival of passengers 
 # Example Input
 Below is an example of the input file content that the FloorSubsystem will parse:
 14:04:50 1 Up 10
-14:04:55 5 Up 8
-14:04:55 5 Up 8
-14:04:55 5 Up 8
-14:04:55 5 Up 8
-14:04:55 5 Up 8
-14:04:55 5 Up 8
-14:04:55 5 Up 8
 14:04:55 5 Up 8
 14:05:25 6 Down 4
 14:05:30 2 Up 7
@@ -99,14 +92,6 @@ Sameh Gawish
 # UML Class Diagram
 ![UML Class Diagram](https://github.com/adhambadawi/SYSC3303Project/assets/89320833/0b00b6aa-6d68-45dc-9db0-5c595e20cd41)
 
-# State Machine Diagram
-![State-Machine-Diagram (1) drawio](https://github.com/adhambadawi/SYSC3303Project/assets/89320833/4b064fdd-bb26-408b-a114-4615df293267)
-
-# Sequence Diagram
-<img width="1918" alt="Sequence Diagram - Template (Community)" src="https://github.com/adhambadawi/SYSC3303Project/assets/89320833/1c1a9a38-6f0d-43da-8aa3-79037ce0ee61">
-
 # Version History
 - 1.00: Initial release
 - 3.00: The new release includes dividing the system into separate programs communicating via UDP and creating multiple elevator cars that operate independently. We have also added a weight limit for each elevator car that we are assuring is not exceeded.
-
-

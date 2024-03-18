@@ -265,7 +265,7 @@ public class Scheduler {
     /**
      * a running thread to keep the class in always state of listening to the ElevatorSubsystem
      */
-    public void listenToElevatorSubSystemCalls() {
+    private void listenToElevatorSubSystemCalls() {
         Thread ElevatorSubsystemListenerThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -278,7 +278,7 @@ public class Scheduler {
     /**
      * a running thread to keep the class in always state of listening to the FloorSubsystem
      */
-    public void listenToFloorSubSystemCalls() {
+    private void listenToFloorSubSystemCalls() {
         Thread floorSubsystemListenerThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -293,7 +293,7 @@ public class Scheduler {
      * creates the receiving socket and packet, decodes them and get the needed data from the scheduler class then sends
      * this data in a new packet to the same port
      */
-    public void listenToElevatorSubsystemRequests() {
+    private void listenToElevatorSubsystemRequests() {
         try {
             elevatorSendReceiveSocket = new DatagramSocket(69);
             //timeout if no calls received for one minute 
@@ -340,7 +340,7 @@ public class Scheduler {
      * creates the receiving socket and packet, decodes them and get the needed data from the scheduler class then sends
      * this data in a new packet to the same port
      */
-    public void listenToFloorSubsystemRequests() {
+    private void listenToFloorSubsystemRequests() {
         try {
                 floorSendReceiveSocket = new DatagramSocket(23);
                 //timeout if no calls received for two minute 
