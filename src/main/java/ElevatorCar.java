@@ -84,4 +84,8 @@ public class ElevatorCar implements Runnable{
     public int getElevatorCarID() {
         return elevatorCarID;
     }
+
+    public static int getMoveTime() {
+        return MOVE_TIME;
+    }
 }

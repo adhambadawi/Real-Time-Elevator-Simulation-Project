@@ -13,6 +13,9 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.io.IOException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
 * Scheduler states interface
@@ -294,6 +297,8 @@ public class Scheduler {
      * this data in a new packet to the same port
      */
     private void listenToElevatorSubsystemRequests() {
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+
         try {
             elevatorSendReceiveSocket = new DatagramSocket(69);
             //timeout if no calls received for one minute 
@@ -312,11 +317,26 @@ public class Scheduler {
 
                     ElevatorSubsystem.Action action = getNextAction(elevatorId, currentFloor);
 
-
                     byte[] sendData = action.name().getBytes("UTF-8");
 
                     DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, receivePacket.getAddress(), receivePacket.getPort());
                     elevatorSendReceiveSocket.send(sendPacket);
+
+                    int direction = 0;
+                    switch (action) {
+                        case UP:
+                            direction = 1;
+                            break;
+                        case DOWN:
+                            direction = -1;
+                            break;
+                    }
+
+                    if (direction != 0) {
+                        final int expectedFloor = currentFloor + direction;
+                        executor.schedule(() -> verifyElevatorCarArrival(elevatorId, expectedFloor), ElevatorCar.getMoveTime() + 2000, TimeUnit.MILLISECONDS); // Schedule method to verify the arrival of the elevator car at the desired floor within 2s of the expected time
+                    }
+
                     // Resetting the timeout
                     elevatorSendReceiveSocket.setSoTimeout(60000);
                 }
@@ -332,6 +352,7 @@ public class Scheduler {
             // Ensure the socket is closed to release resources
             if (elevatorSendReceiveSocket != null && !elevatorSendReceiveSocket.isClosed()) {
                 elevatorSendReceiveSocket.close();
+                executor.shutdown();
             }
         }
     }
@@ -392,7 +413,7 @@ public class Scheduler {
         }
     }
 
-    public void SendDisplayInfoToFloorSubsystem(int elevatorCarID, int currentFloor){
+    public void SendDisplayInfoToFloorSubsystem(int elevatorCarID, int currentFloor) {
         try {
             floorSendSocket = new DatagramSocket();
             floorSendSocket.setSoTimeout(60000);
@@ -421,5 +442,19 @@ public class Scheduler {
                 floorSendSocket.close();
             }
         }
+    }
+
+    /**
+     * Check that the elevator has reached the next floor within the expected time, output a fault and remove the car from service if so
+     * @param elevatorId The ID of the elevator to chceck
+     * @param expectedFloor The floor the elevator should be on
+     */
+    private void verifyElevatorCarArrival(int elevatorId, int expectedFloor) {
+        if (elevatorCarPositions.get(elevatorId) == expectedFloor) {
+            return;
+        }
+
+        System.out.println(String.format("[SCHEDULER] FAULT DETECTED: Elevator car %d failed to arrive at floor %d", elevatorId, expectedFloor));
+        requestsQueue.add(activeTrips.remove(elevatorId));  // Add the active trip back to queue so that it can be serviced by another elevator
     }
 }
