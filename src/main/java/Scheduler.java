@@ -144,6 +144,7 @@ public class Scheduler {
     private Map<Integer, Integer> elevatorCarPositions;
     private Map<Integer, ElevatorCall> activeTrips;
     private DatagramSocket elevatorSendReceiveSocket, floorSendReceiveSocket, floorSendSocket;
+    private Set<Integer> disabledElevatorCars = Collections.synchronizedSet(new HashSet<>());
 
 
 
@@ -184,7 +185,7 @@ public class Scheduler {
             }
             scheduler.listenToElevatorSubSystemCalls();
             scheduler.listenToFloorSubSystemCalls();
-            
+            scheduler.listenForFaultNotifications();
         }
         return scheduler;
     }
@@ -244,7 +245,24 @@ public class Scheduler {
     }
 
 
+    /**
+     * Assigns the next available elevator call to the specified elevator car, if the car is not disabled.
+     * This method first checks if the elevator car is disabled and if not, it attempts to assign an available
+     * trip from the request queue. If a trip is successfully assigned, it also attempts to merge similar
+     * requests to optimize the trip.
+     *
+     * @param elevatorId The ID of the elevator car to which a trip might be assigned.
+     * @return {@code true} if a trip was successfully assigned to the elevator car, {@code false} if no trip
+     *         could be assigned either because the car is disabled, there are no pending requests, or some
+     *         other condition prevents assignment.
+     */
     public synchronized boolean assignTrip(int elevatorId) {
+        // Check if the elevator car is disabled
+        if (disabledElevatorCars.contains(elevatorId)) {
+            System.out.println("Elevator car " + elevatorId + " is disabled and cannot be assigned trips.");
+            return false;
+        }
+
         if (requestsQueue.size() == 0) {
             return false;
         }
@@ -445,6 +463,58 @@ public class Scheduler {
     }
 
     /**
+     * Starts a background thread that listens for fault notifications on a specific UDP port.
+     * This method creates a socket to listen for incoming fault messages from elevator cars indicating
+     * issues such as door faults. Upon receiving a fault message, it handles the message by calling
+     * {@code handleFaultMessage}.
+     *
+     * This listener runs in a separate thread to avoid blocking the main application flow and continues
+     * listening until the thread is interrupted.
+     */
+    private void listenForFaultNotifications() {
+        Thread faultListenerThread = new Thread(() -> {
+            try (DatagramSocket socket = new DatagramSocket(100)) {
+                byte[] buffer = new byte[1024];
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
+                while (!Thread.currentThread().isInterrupted()) {
+                    socket.receive(packet);
+                    String faultMessage = new String(packet.getData(), 0, packet.getLength());
+                    handleFaultMessage(faultMessage);
+                }
+            } catch (SocketException e) {
+                System.err.println("SocketException in fault listener: " + e.getMessage());
+            } catch (IOException e) {
+                System.err.println("IOException in fault listener: " + e.getMessage());
+            }
+        });
+        faultListenerThread.start();
+    }
+
+    /**
+     * Handles incoming fault messages from elevator cars. This method is called when a fault message
+     * is received, indicating a problem such as a door fault with an elevator car. The message format
+     * is expected to be "DOOR_FAULT:{elevatorId}", where {elevatorId} is the ID of the elevator car with
+     * the fault.
+     *
+     * Upon receiving a fault message, this method marks the specified elevator car as disabled, preventing
+     * it from being assigned new trips, and reassigns any active trip to another elevator.
+     *
+     * @param faultMessage The received fault message in the format "DOOR_FAULT:{elevatorId}".
+     */
+    private void handleFaultMessage(String faultMessage) {
+        System.out.println("Received fault message: " + faultMessage);
+        // Example fault message format: "DOOR_FAULT:3"
+        if (faultMessage.startsWith("DOOR_FAULT:")) {
+            int elevatorId = Integer.parseInt(faultMessage.split(":")[1]);
+            disabledElevatorCars.add(elevatorId);
+            requestsQueue.add(activeTrips.remove(elevatorId));// Add the active trip back to queue so that it can be serviced by another elevator
+            System.out.println("Elevator car " + elevatorId + " has been marked as disabled due to a door fault.");
+        }
+    }
+
+
+    /**
      * Check that the elevator has reached the next floor within the expected time, output a fault and remove the car from service if so
      * @param elevatorId The ID of the elevator to chceck
      * @param expectedFloor The floor the elevator should be on
@@ -455,6 +525,7 @@ public class Scheduler {
         }
 
         System.out.println(String.format("[SCHEDULER] FAULT DETECTED: Elevator car %d failed to arrive at floor %d", elevatorId, expectedFloor));
+        disabledElevatorCars.add(elevatorId);
         requestsQueue.add(activeTrips.remove(elevatorId));  // Add the active trip back to queue so that it can be serviced by another elevator
     }
 }
