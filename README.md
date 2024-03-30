@@ -71,17 +71,17 @@ Yasmina Younes
 Sameh Gawish
 
 # Contributions
-1. Scheduler UDP: Sameh Gawish, Jaden Sutton
-2. ElevatorSubsystem UDP: Sameh Gawish, Yasmina Younes
-3. FloorSubsystem UDP: Dana El Sherif, Amr Abdelazeem
-4. Scheduler Multiple Elevators: Jaden Sutton, Amr Abdelazeem
-5. ElevatorSybsystem Multiple Elevators: Jaden Sutton, Amr Abdelazeem, Adham Badawi
-6. ElevatorCar: Jaden Sutton, Amr Abdelazeem
-7. Passenger class: Adham Badawi
-8. Assuring the total weight of passengers in an elevator car doesn't exceed 500 KGs: Adham Badawi, Yasmina Younes
-9. Testing: Adham Badawi, Yasmina Younes, Dana El Sherif
-10. Diagrams: Dana El Sherif, Yasmina Younes
-11. Readme:Yasmina Younes
+1. Implementing the floor arrival detection: Jaden Sutton, Dana El Sherif
+2. Implementing handling the floor arrival error: Jaden Sutton
+3. Implementing the door stuck detection: Adham Badawi, Amr Abdelazeem
+4. Implementing handling the door stuck error: Adham Badawi, Yasmina Younes
+5. Timing Diagram for floor arrival hard fault: Amr Abdelazeem
+6. Timing Diagram for door stuck (failed): Sameh Gawish
+7. Timing Diagram for door stuck (recovered): Yasmina Younes
+8. Updating the Sequence diagram: Sameh Gawish
+9. Updating the UML Class diagram: Yasmina Younes
+10. Testing the floor arrival error detection and handling: Jaden Sutton, Dana El Sherif
+11. Testing the floor arrival error detection and handling: Yasmina Younes, Sameh Gawish
 
 # State Machine Diagram
 ![State-Machine-Diagram (1) drawio](https://github.com/adhambadawi/SYSC3303Project/assets/89320833/4b064fdd-bb26-408b-a114-4615df293267)
@@ -94,4 +94,4 @@ Sameh Gawish
 
 # Version History
 - 1.00: Initial release
-- 3.00: The new release includes dividing the system into separate programs communicating via UDP and creating multiple elevator cars that operate independently. We have also added a weight limit for each elevator car that we are assuring is not exceeded.
+- 4.00: The new release includes detecting and handling faults by adding timing events to detect floor arrival errors and toggling door errors.
