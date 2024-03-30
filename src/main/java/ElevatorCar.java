@@ -15,15 +15,15 @@ import java.net.InetAddress;
 */
 public class ElevatorCar implements Runnable{
     private ElevatorSubsystem elevatorSubsystem; //the owner elevatorSubsystem
-    private static final int MOVE_TIME = 8006;
-    protected static final int DOOR_OPEN_TIME = 3238;
+    private static final int MOVE_TIME = 8006; //change to 1000 for testing purposes
+    protected static final int DOOR_OPEN_TIME = 3238; //change to 300 for testing purposes
     private static final int STARTING_FLOOR = 1;
     private static int elevatorCarIDCounter = 0;
-    private int elevatorCarID;
-    private int currentFloor = STARTING_FLOOR;
+    int elevatorCarID;
+    protected int currentFloor = STARTING_FLOOR;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private ScheduledFuture<?> doorOperationFuture;
-    private int doorOperationRetryCount = 0;
+    protected ScheduledFuture<?> doorOperationFuture;
+    protected int doorOperationRetryCount = 0;
     private static final int DOOR_FAULT_TIMEOUT = 5; // seconds
     private static final int MAX_DOOR_OPERATION_RETRIES = 3;
     protected boolean running = true;
@@ -119,7 +119,7 @@ public class ElevatorCar implements Runnable{
      *
      * This method schedules a fault detection task that runs after a predefined timeout period to handle potential door operation faults.
      */
-    private void startDoorOperationTimer() {
+    public void startDoorOperationTimer() {
         Runnable faultDetectionTask = () -> {
             if (doorOperationRetryCount < MAX_DOOR_OPERATION_RETRIES) {
                 System.out.println(String.format("[Elevator Car %d] Door operation took too long, attempting retry %d", elevatorCarID, doorOperationRetryCount + 1));
@@ -143,7 +143,7 @@ public class ElevatorCar implements Runnable{
      *
      * @throws Exception if there is an error sending the fault notification to the Scheduler.
      */
-    private void notifySchedulerOfFault() {
+    protected void notifySchedulerOfFault() {
         String faultMessage = "DOOR_FAULT:" + elevatorCarID;
         byte[] messageBytes = faultMessage.getBytes();
 

@@ -357,6 +357,7 @@ public class Scheduler {
 
                     if (direction != 0) {
                         final int expectedFloor = currentFloor + direction;
+                        // Change to 200 for testing purposes
                         executor.schedule(() -> verifyElevatorCarArrival(elevatorId, expectedFloor), ElevatorCar.getMoveTime() + 2000, TimeUnit.MILLISECONDS); // Schedule method to verify the arrival of the elevator car at the desired floor within 2s of the expected time
                     }
 
@@ -434,6 +435,7 @@ public class Scheduler {
                 floorSendReceiveSocket.close();
             }
         }
+        requestsComplete = true;
     }
 
     public void SendDisplayInfoToFloorSubsystem(int elevatorCarID, int currentFloor) {
