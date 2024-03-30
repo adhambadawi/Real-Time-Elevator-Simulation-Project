@@ -333,7 +333,12 @@ public class Scheduler {
 
                     SendDisplayInfoToFloorSubsystem(elevatorId, currentFloor);
 
-                    ElevatorSubsystem.Action action = getNextAction(elevatorId, currentFloor);
+                    ElevatorSubsystem.Action action;
+                    if (disabledElevatorCars.contains(elevatorId)) {
+                        action = ElevatorSubsystem.Action.QUIT;
+                    } else {
+                        action = getNextAction(elevatorId, currentFloor);
+                    }
 
                     byte[] sendData = action.name().getBytes("UTF-8");
 

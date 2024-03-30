@@ -26,6 +26,7 @@ public class ElevatorCar implements Runnable{
     private int doorOperationRetryCount = 0;
     private static final int DOOR_FAULT_TIMEOUT = 5; // seconds
     private static final int MAX_DOOR_OPERATION_RETRIES = 3;
+    protected boolean running = true;
 
     public ElevatorCar(ElevatorSubsystem elevatorSubsystem){
         //this is considered the owner elevatorSubsystem under which an instantiated
@@ -76,6 +77,11 @@ public class ElevatorCar implements Runnable{
                     }
                     break;
             }
+
+            if (!running) {
+                return;
+            }
+
             action = elevatorSubsystem.getAction(this.elevatorCarID);
         }
     }
