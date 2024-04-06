@@ -12,8 +12,8 @@ public class Passenger {
     private int passengerWeight;
 
     public Passenger() {
-        // Assign a random weight between 50 to 100 kgs
-        this.passengerWeight = new Random().nextInt(51) + 50;
+        // being constant instead of random since the elevator is bounded by a number of passengers (5)
+        this.passengerWeight = 100;
     }
 
     public int getPassengerWeight() {

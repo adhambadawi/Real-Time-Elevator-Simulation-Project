@@ -517,6 +517,11 @@ public class Scheduler {
             disabledElevatorCars.add(elevatorId);
             requestsQueue.add(activeTrips.remove(elevatorId));// Add the active trip back to queue so that it can be serviced by another elevator
             System.out.println("Elevator car " + elevatorId + " has been marked as disabled due to a door fault.");
+        } else if (faultMessage.startsWith("TEMP_DISABLE:")) {
+            int elevatorId = Integer.parseInt(faultMessage.split(":")[1]);
+            disabledElevatorCars.add(elevatorId);
+            requestsQueue.add(activeTrips.remove(elevatorId));// Add the active trip back to queue so that it can be serviced by another elevator
+            System.out.println("Elevator car " + elevatorId + " has been temporarily disabled due to a potential door fault.");
         }
     }
 

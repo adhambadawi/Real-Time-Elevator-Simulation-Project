@@ -23,7 +23,7 @@ public class ElevatorCall {
     private Integer currentFloor;
 
     private int passengersTotalWeight;
-    private static final int ELEVATOR_WEIGHT_LIMIT = 500;
+    private static final int ELEVATOR_WEIGHT_LIMIT = 550;
 
     /**
      * Construct a new ElevatorCall object
