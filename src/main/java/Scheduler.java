@@ -28,11 +28,18 @@ interface SchedulerState {
      */
     default void addRequest(Scheduler context, ElevatorCall elevatorCall){
         context.setState("AddingRequest");
+
+        if (elevatorCall == null) {
+            System.out.println("Attempted to add a null ElevatorCall to the queue.");
+            return;
+        }
         
         for (ElevatorCall elevatorCallIterator : context.getActiveTrips().values()) {
             System.out.println(elevatorCallIterator);
-            if (elevatorCallIterator.mergeRequest(elevatorCall)) {
+            if (elevatorCall != null && elevatorCallIterator.mergeRequest(elevatorCall)) {
                 return; // Request merged, no need to add to the queue
+            } else {
+                System.out.println("Attempted to merge a null ElevatorCall");
             }
         }
 
@@ -44,7 +51,7 @@ interface SchedulerState {
         // After handling, transition state back to waiting for a request state
         
         context.setState("WaitingForRequest");
-    };
+    }
 
     /**
      * 
@@ -223,6 +230,11 @@ public class Scheduler {
     public synchronized void addRequest(ElevatorCall elevatorCall){
         //try to adding the coming request to an existing request
         System.out.println(String.format("[SCHEDULER] Received new elevator call: \n%s", elevatorCall));
+
+        if (elevatorCall == null) {
+            System.out.println("Attempted to add a null ElevatorCall to the queue.");
+            return;
+        }
     
         //Delegate the task to the corresponding state 
         currentState.addRequest(this, elevatorCall);  
@@ -257,31 +269,41 @@ public class Scheduler {
      *         other condition prevents assignment.
      */
     public synchronized boolean assignTrip(int elevatorId) {
-        // Check if the elevator car is disabled
         if (disabledElevatorCars.contains(elevatorId)) {
             System.out.println("Elevator car " + elevatorId + " is disabled and cannot be assigned trips.");
             return false;
         }
 
-        if (requestsQueue.size() == 0) {
+        if (requestsQueue.isEmpty()) {
             return false;
         }
 
         ElevatorCall nextRequest = requestsQueue.remove(0);
-        nextRequest.setCurrentFloor(elevatorCarPositions.get(elevatorId));
+        if (nextRequest == null) {
+            System.out.println("No valid request to assign for elevator " + elevatorId);
+            return false;
+        }
+        Integer currentPosition = elevatorCarPositions.get(elevatorId);
+        if (currentPosition != null) {
+            nextRequest.setCurrentFloor(currentPosition);
+        } else {
+            System.out.println("Current position for elevator " + elevatorId + " is undefined.");
+        }
 
         List<ElevatorCall> merged = new ArrayList<>();
         for (ElevatorCall request : requestsQueue) {
-            if (nextRequest.mergeRequest(request)) {
+            if (request != null && nextRequest.mergeRequest(request)) {
                 merged.add(request);
+            } else {
+                System.out.println("Failed to merge request or request was null for elevator " + elevatorId);
             }
         }
         requestsQueue.removeAll(merged);
-
         activeTrips.put(elevatorId, nextRequest);
         System.out.println("Elevator car " + elevatorId + " got assigned the request: " + nextRequest);
         return true;
     }
+
 
     /**
      * a running thread to keep the class in always state of listening to the ElevatorSubsystem
@@ -512,11 +534,16 @@ public class Scheduler {
     private void handleFaultMessage(String faultMessage) {
         System.out.println("Received fault message: " + faultMessage);
         // Example fault message format: "DOOR_FAULT:3"
-        if (faultMessage.startsWith("DOOR_FAULT:")) {
+        if (faultMessage.startsWith("PERM_DISABLE:")) {
             int elevatorId = Integer.parseInt(faultMessage.split(":")[1]);
             disabledElevatorCars.add(elevatorId);
             requestsQueue.add(activeTrips.remove(elevatorId));// Add the active trip back to queue so that it can be serviced by another elevator
-            System.out.println("Elevator car " + elevatorId + " has been marked as disabled due to a door fault.");
+            System.out.println("Elevator car " + elevatorId + " has been permanently disabled due to a door fault.");
+        } else if (faultMessage.startsWith("TEMP_DISABLE:")) {
+            int elevatorId = Integer.parseInt(faultMessage.split(":")[1]);
+            disabledElevatorCars.add(elevatorId);
+            requestsQueue.add(activeTrips.remove(elevatorId));// Add the active trip back to queue so that it can be serviced by another elevator
+            System.out.println("Elevator car " + elevatorId + " has been temporarily disabled due to a potential door fault.");
         }
     }
 
