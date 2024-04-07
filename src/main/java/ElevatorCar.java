@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -27,6 +29,7 @@ public class ElevatorCar implements Runnable{
     private static final int DOOR_FAULT_TIMEOUT = 5; // seconds
     private static final int MAX_DOOR_OPERATION_RETRIES = 3;
     protected boolean running = true;
+    private List<ElevatorSubsystemGui> views;
 
     public ElevatorCar(ElevatorSubsystem elevatorSubsystem){
         //this is considered the owner elevatorSubsystem under which an instantiated
@@ -35,6 +38,7 @@ public class ElevatorCar implements Runnable{
         this.elevatorCarID = elevatorCarIDCounter++; //elevator (shaft) ID
         //register elevatorCar to the elevatorSubsystem
         this.elevatorSubsystem.registerElevatorCar(this);
+        views = new ArrayList<>();
     }
 
     //Getters and setters
@@ -79,10 +83,14 @@ public class ElevatorCar implements Runnable{
             }
 
             if (!running) {
-                return;
+                break;
             }
 
             action = elevatorSubsystem.getAction(this.elevatorCarID);
+        }
+
+        for (ElevatorSubsystemGui view : views) {
+            view.handleElevatorRemoval(elevatorCarID);
         }
     }
 
@@ -102,8 +110,14 @@ public class ElevatorCar implements Runnable{
         try {
             Thread.sleep(DOOR_OPEN_TIME);
             System.out.println(String.format("[Elevator Car %d] Doors open", elevatorCarID));
+            for (ElevatorSubsystemGui view : views) {
+                view.handleElevatorDoorOpen(elevatorCarID, currentFloor);
+            }
             Thread.sleep(DOOR_OPEN_TIME);
             System.out.println(String.format("[Elevator Car %d] Doors closed", elevatorCarID));
+            for (ElevatorSubsystemGui view : views) {
+                view.handleElevatorDoorClose(elevatorCarID, currentFloor);
+            }
 
             // Cancel the timer if the operation was completed within the expected timeframe
             doorOperationFuture.cancel(false);
@@ -169,5 +183,12 @@ public class ElevatorCar implements Runnable{
         }
         currentFloor += direction;
         System.out.println(String.format("[Elevator Car %d] Moved to floor %d", elevatorCarID, currentFloor));
+        for (ElevatorSubsystemGui view : views) {
+            view.handleElevatorPositionUpdate(elevatorCarID, currentFloor);
+        }
+    }
+
+    public void addView(ElevatorSubsystemGui view) {
+        views.add(view);
     }
 }
