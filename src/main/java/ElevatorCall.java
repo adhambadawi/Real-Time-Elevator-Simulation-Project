@@ -86,6 +86,10 @@ public class ElevatorCall {
      * @return true if request was merged, false otherwise
      */
     public boolean mergeRequest(ElevatorCall request) {
+        if (request == null) {
+            System.out.println("[ERROR] Null request passed to mergeRequest.");
+            return false;
+        }
         if (!canMerge(request)) {
             return false;
         }
@@ -99,12 +103,17 @@ public class ElevatorCall {
         return true;
     }
 
+
     /**
      * Check if an incoming request can be merged with this request
      * @param request incoming request
      * @return true if the requests can be merged, false otherwise
      */
     private boolean canMerge(ElevatorCall request) {
+        if (request == null) {
+            System.out.println("[ERROR] Null request passed to canMerge.");
+            return false;
+        }
         if (currentFloor == null) {
             // Cannot merge with this request unless it is currently being serviced as we don't know where the physical elevator is
             return false;
@@ -128,20 +137,28 @@ public class ElevatorCall {
     }
 
     /**
-     * Insert a target floor into the target floor list while maintaining sorted order
+     * Insert a target floor into the target floor list while maintaining sorted order. Ensures that the floors are visited efficiently without unnecessary reversals in direction
      * @param targetFloor floor to insert
      */
     private void insertTargetFloor(int targetFloor) {
-        int insertionIndex = 0;
-        while (insertionIndex < targetFloors.size() && (direction.equals("Up") && targetFloors.get(insertionIndex) < targetFloor) || (direction.equals("Down") && targetFloors.get(insertionIndex) > targetFloor)) {
-            insertionIndex += 1;
-        }
-        if (insertionIndex >= targetFloors.size()) {
-            // Append new target floor to end of target floors if insertion index is out of bounds
-            targetFloors.add(targetFloor);
-        } else if (targetFloors.get(insertionIndex) != targetFloor) {
-            // Only add requests target floor to target floors list if not already included
-            targetFloors.add(insertionIndex, targetFloor);
+        try{
+            int insertionIndex = 0;
+            while (insertionIndex < targetFloors.size() && ((direction.equals("Up") && targetFloors.get(insertionIndex) < targetFloor) || (direction.equals("Down") && targetFloors.get(insertionIndex) > targetFloor))) {
+                // increment until:
+                //Condition 1. The floor at insertionIndex is either not less than targetFloor when moving up, or not greater than targetFloor when moving down, indicating the correct position for insertion has been found.
+                //Condition 2. insertionIndex reaches the size of the targetFloors list, meaning the targetFloor should be added at the end of the list because it is higher (when moving up) or lower (when moving down) than all currently listed floors.
+                insertionIndex += 1;
+            }
+
+            // Check if insertionIndex is within the bounds of the list and the floor isn't already included
+            if (insertionIndex < targetFloors.size() && targetFloors.get(insertionIndex) != targetFloor) {
+                targetFloors.add(insertionIndex, targetFloor); //cond 1
+            } else if (insertionIndex == targetFloors.size()) {
+                // If the index equals the size of the list, add to the end.
+                targetFloors.add(targetFloor); //cond 2
+            }
+        } catch (Exception e) {
+            System.err.println("An error occurred while processing: " + e.getMessage());
         }
     }
 

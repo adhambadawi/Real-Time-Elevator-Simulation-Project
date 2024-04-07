@@ -7,6 +7,7 @@ public class DoorFaultElevatorCar extends ElevatorCar {
     @Override
     // Directly manipulates door operation times for fault simulation
     public void toggleDoors() {
+        System.out.println(String.format("[Elevator Car %d] toggleDoors called, temporarilyDisabled: %s, permanentlyDisabled: %s", getElevatorCarID(), isTemporarilyDisabled, isPermanentlyDisabled));
         if (isPermanentlyDisabled) {
             System.out.println(String.format("[Elevator Car %d] is permanently disabled and cannot operate doors", getElevatorCarID()));
             return;
