@@ -512,11 +512,11 @@ public class Scheduler {
     private void handleFaultMessage(String faultMessage) {
         System.out.println("Received fault message: " + faultMessage);
         // Example fault message format: "DOOR_FAULT:3"
-        if (faultMessage.startsWith("DOOR_FAULT:")) {
+        if (faultMessage.startsWith("PERM_DISABLE:")) {
             int elevatorId = Integer.parseInt(faultMessage.split(":")[1]);
             disabledElevatorCars.add(elevatorId);
             requestsQueue.add(activeTrips.remove(elevatorId));// Add the active trip back to queue so that it can be serviced by another elevator
-            System.out.println("Elevator car " + elevatorId + " has been marked as disabled due to a door fault.");
+            System.out.println("Elevator car " + elevatorId + " has been permanently disabled due to a door fault.");
         } else if (faultMessage.startsWith("TEMP_DISABLE:")) {
             int elevatorId = Integer.parseInt(faultMessage.split(":")[1]);
             disabledElevatorCars.add(elevatorId);

@@ -26,7 +26,7 @@ public class ElevatorCar implements Runnable{
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     protected ScheduledFuture<?> doorOperationFuture;
     protected int doorOperationRetryCount = 0;
-    private static final int DOOR_FAULT_TIMEOUT = 5; // seconds
+    private static final int DOOR_FAULT_TIMEOUT = 12; // seconds
     private static final int MAX_DOOR_OPERATION_RETRIES = 3;
     protected boolean running = true;
     protected boolean doorOperationCompleted = false;
@@ -39,6 +39,7 @@ public class ElevatorCar implements Runnable{
         //this is considered the owner elevatorSubsystem under which an instantiated
         // elevator car object is registered.
         this.elevatorSubsystem = elevatorSubsystem;
+        //this.elevatorCarID = id;
         this.elevatorCarID = elevatorCarIDCounter++; //elevator (shaft) ID
         //register elevatorCar to the elevatorSubsystem
         this.elevatorSubsystem.registerElevatorCar(this);
@@ -101,6 +102,7 @@ public class ElevatorCar implements Runnable{
      * @throws RuntimeException - if the thread is interrupted while waiting for the door operation to complete.
      */
     public void toggleDoors() {
+        System.out.println(String.format("[Elevator Car %d] toggleDoors called, temporarilyDisabled: %s, permanentlyDisabled: %s", getElevatorCarID(), isTemporarilyDisabled, isPermanentlyDisabled));
         // If the car is permanently disabled, do not proceed with any operation
         if (isPermanentlyDisabled) {
             System.out.println(String.format("[Elevator Car %d] is permanently disabled and cannot operate doors", getElevatorCarID()));
@@ -110,6 +112,8 @@ public class ElevatorCar implements Runnable{
         // Initiating door operation, only if not temporarily disabled
         if (!isTemporarilyDisabled) {
             startDoorOperationTimer();
+        } else {
+            System.out.println(String.format("[Elevator Car %d] is temporarily disabled, retrying door operation", getElevatorCarID()));
         }
 
         doorOperationCompleted = false;
@@ -129,9 +133,8 @@ public class ElevatorCar implements Runnable{
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
 
-            if (duration <= 11500) { //Check if the operation took 11.5 seconds or less
+            if (duration <= 12000 && !isTemporarilyDisabled) { //Check if the operation took 12 seconds or less
                 doorOperationCompleted = true; // Set flag to true as operation completed within expected time
-                isTemporarilyDisabled = false;
                 System.out.println(String.format("[Elevator Car %d] Door operation completed successfully in %d ms.", elevatorCarID, duration));
 
                 // Operation successful - cancel the future and reset retry count
@@ -140,6 +143,10 @@ public class ElevatorCar implements Runnable{
 
             } else { //Operation took more than 11.5 seconds
                 System.out.println(String.format("[Elevator Car %d] Door operation took too long (%d ms), which may indicate a fault.", elevatorCarID, duration));
+                // If this was a retry after a temporary fault, handle it accordingly
+                if (isTemporarilyDisabled) {
+                    handleRetryAfterFault();
+                }
             }
 
         } catch (InterruptedException e) {
@@ -167,7 +174,7 @@ public class ElevatorCar implements Runnable{
                 } else {
                     // The retries have been exceeded, permanently disable the car
                     System.out.println(String.format("[Elevator Car %d] Door operation fault detected, exceeded retries", getElevatorCarID()));
-                    notifySchedulerOfFault();
+                    permanentlyDisableCar();
                 }
             }
         };
@@ -182,6 +189,7 @@ public class ElevatorCar implements Runnable{
      *
      * @throws Exception if there is an error sending the fault notification to the Scheduler.
      */
+    /*
     protected void notifySchedulerOfFault() {
         String faultMessage = "DOOR_FAULT:" + elevatorCarID;
         byte[] messageBytes = faultMessage.getBytes();
@@ -197,8 +205,10 @@ public class ElevatorCar implements Runnable{
         } catch (Exception e) {
             System.err.println("Error sending door fault notification to Scheduler: " + e.getMessage());
         }
-    }
+    }*/
+
     public void temporarilyDisableCar() {
+        System.out.println(String.format("[Elevator Car %d] temporarilyDisableCar called, doorOperationRetryCount: %d", getElevatorCarID(), doorOperationRetryCount));
         synchronized (lock) {
             isTemporarilyDisabled = true;
             notifySchedulerOfTemporaryDisable();
@@ -223,10 +233,61 @@ public class ElevatorCar implements Runnable{
         }
     }
 
+    void handleRetryAfterFault() {
+        if (doorOperationRetryCount < MAX_DOOR_OPERATION_RETRIES) {
+            // Still have retries left, keep the car temporarily disabled and retry
+            doorOperationRetryCount++;
+            System.out.println(String.format("[Elevator Car %d] Retrying door operation, attempt %d", getElevatorCarID(), doorOperationRetryCount));
+            toggleDoors();
+        } else {
+            // Exceeded maximum retries, permanently disable the car
+            System.out.println(String.format("[Elevator Car %d] Door operation fault detected, exceeded retries", getElevatorCarID()));
+            permanentlyDisableCar();
+            notifySchedulerOfPermanentDisable();
+        }
+    }
+
+    /**
+     * Permanently disables the elevator car. This method sets the car's state to permanently disabled,
+     * ensuring that it no longer accepts trip requests or door operations. It also informs the Scheduler
+     * that the car is out of service.
+     */
     public void permanentlyDisableCar() {
-        isTemporarilyDisabled = false;
-        isPermanentlyDisabled = true;
-        // Additional logic for permanent disable, such as notifying the scheduler
+        isPermanentlyDisabled = true; // Set the permanently disabled flag
+        isTemporarilyDisabled = false; // Clear the temporarily disabled flag
+
+        // Stop the door operation timer as the car is now permanently disabled
+        if (doorOperationFuture != null && !doorOperationFuture.isDone()) {
+            doorOperationFuture.cancel(true);
+        }
+
+        // Notify the Scheduler of the car's permanent disability
+        notifySchedulerOfPermanentDisable();
+
+        System.out.println(String.format("[Elevator Car %d] has been permanently disabled.", getElevatorCarID()));
+    }
+
+
+    /**
+     * Notifies the Scheduler of a permanent door operation fault by sending a fault message via UDP.
+     * This message alerts the Scheduler to remove the elevator car from the pool of active cars and
+     * redistribute any pending requests to other cars.
+     */
+    protected void notifySchedulerOfPermanentDisable() {
+        String faultMessage = "PERM_DISABLE:" + getElevatorCarID();
+        byte[] messageBytes = faultMessage.getBytes();
+
+        try (DatagramSocket socket = new DatagramSocket()) {
+            InetAddress schedulerAddress = InetAddress.getLocalHost();
+            int schedulerPort = 100; // Scheduler's listening port for handling permanent disable messages
+
+            DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, schedulerAddress, schedulerPort);
+            socket.send(packet);
+
+            System.out.println(String.format("[Elevator Car %d] Sent permanent disable notification to Scheduler", getElevatorCarID()));
+        } catch (Exception e) {
+            System.err.println("Error sending permanent disable notification to Scheduler: " + e.getMessage());
+        }
     }
 
     public void move(int direction) {
