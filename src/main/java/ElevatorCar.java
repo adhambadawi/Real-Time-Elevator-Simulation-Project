@@ -132,13 +132,12 @@ public class ElevatorCar implements Runnable{
         try {
             System.out.println(String.format("[Elevator Car %d] Door opening", elevatorCarID));
             Thread.sleep(DOOR_OPEN_TIME);
-            System.out.println(String.format("[Elevator Car %d] Door opened, now boarding passenger(s)", elevatorCarID));
-            Thread.sleep(BOARDING_TIME);
-            System.out.println(String.format("[Elevator Car %d] Passenger(s) boarded, now closing door", elevatorCarID));
-            System.out.println(String.format("[Elevator Car %d] Doors open", elevatorCarID));
             for (ElevatorSubsystemGui view : views) {
                 view.handleElevatorDoorOpen(elevatorCarID, currentFloor);
             }
+            System.out.println(String.format("[Elevator Car %d] Door opened, now boarding passenger(s)", elevatorCarID));
+            Thread.sleep(BOARDING_TIME);
+            System.out.println(String.format("[Elevator Car %d] Passenger(s) boarded, now closing door", elevatorCarID));
             Thread.sleep(DOOR_OPEN_TIME);
             System.out.println(String.format("[Elevator Car %d] Doors closed", elevatorCarID));
             for (ElevatorSubsystemGui view : views) {
