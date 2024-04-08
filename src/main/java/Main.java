@@ -1,5 +1,5 @@
 public class Main {
-    private static final int NUM_ELEVATOR_CARS = 1;
+    private static final int NUM_ELEVATOR_CARS = 4;
     private static final int NUM_FLOOR_ARRIVAL_FAULT_CARS = 1;
     private static final int NUM_DOOR_FAULT_CARS = 1;
     private static final int TOTAL_ELEVATOR_CARS = NUM_ELEVATOR_CARS + NUM_FLOOR_ARRIVAL_FAULT_CARS + NUM_DOOR_FAULT_CARS;
@@ -11,7 +11,7 @@ public class Main {
         FloorSubsystem floorSubSystem = new FloorSubsystem("ElevatorCalls");
         floorThread = new Thread(floorSubSystem);
 
-        ElevatorSubsystemGui gui = new ElevatorSubsystemGui(TOTAL_ELEVATOR_CARS, 10);
+        ElevatorSubsystemGui gui = new ElevatorSubsystemGui(TOTAL_ELEVATOR_CARS, 22);
 
         //Create elevator car threads
         Thread[] elevatorCarThreads = new Thread[TOTAL_ELEVATOR_CARS];
