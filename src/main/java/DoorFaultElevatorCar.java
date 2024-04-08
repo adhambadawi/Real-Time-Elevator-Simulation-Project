@@ -24,7 +24,7 @@ public class DoorFaultElevatorCar extends ElevatorCar {
         // Simulate an extended door operation time to force a fault condition
         try {
             System.out.println(String.format("[Elevator Car %d] Door opening (fault simulated)", getElevatorCarID()));
-            Thread.sleep(DOOR_OPEN_TIME * 10);  // Intentionally long sleep to simulate a fault
+            Thread.sleep(DOOR_OPEN_TIME * 5);  // Intentionally long sleep to simulate a fault
 
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;

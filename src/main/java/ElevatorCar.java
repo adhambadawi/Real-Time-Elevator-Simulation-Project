@@ -37,8 +37,14 @@ public class ElevatorCar implements Runnable{
     protected boolean isPermanentlyDisabled = false;
     private final Object lock = new Object(); // To handle synchronization
     private List<ElevatorSubsystemGui> views;
+    public enum ServiceState {
+        IN_SERVICE,
+        OUT_OF_SERVICE
+    }
+    private ServiceState serviceState;
 
     public ElevatorCar(ElevatorSubsystem elevatorSubsystem){
+        this.serviceState = ServiceState.IN_SERVICE;
         //this is considered the owner elevatorSubsystem under which an instantiated
         // elevator car object is registered.
         this.elevatorSubsystem = elevatorSubsystem;
@@ -47,6 +53,14 @@ public class ElevatorCar implements Runnable{
         //register elevatorCar to the elevatorSubsystem
         this.elevatorSubsystem.registerElevatorCar(this);
         views = new ArrayList<>();
+    }
+
+    public void setServiceState(ServiceState serviceState) {
+        this.serviceState = serviceState;
+    }
+
+    public ServiceState getServiceState() {
+        return serviceState;
     }
 
     //Getters and setters
@@ -97,9 +111,12 @@ public class ElevatorCar implements Runnable{
             action = elevatorSubsystem.getAction(this.elevatorCarID);
         }
 
+        this.setServiceState(ServiceState.OUT_OF_SERVICE);
+
         for (ElevatorSubsystemGui view : views) {
             view.handleElevatorRemoval(elevatorCarID);
         }
+
     }
 
     /**
@@ -257,6 +274,7 @@ public class ElevatorCar implements Runnable{
             // Exceeded maximum retries, permanently disable the car
             System.out.println(String.format("[Elevator Car %d] Door operation fault detected, exceeded retries", getElevatorCarID()));
             permanentlyDisableCar();
+            this.setServiceState(ServiceState.OUT_OF_SERVICE);
             notifySchedulerOfPermanentDisable();
         }
     }

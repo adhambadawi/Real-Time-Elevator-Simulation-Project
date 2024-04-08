@@ -167,11 +167,11 @@ public class Scheduler {
     Scheduler() {
         requestsQueue = Collections.synchronizedList(new ArrayList<>());
         elevatorCarPositions = new HashMap<>();
-        activeTrips = new HashMap<>();
+        activeTrips = Collections.synchronizedMap(new HashMap<>());
         requestsComplete = false;
         states = new HashMap<>();
 
-        //Adding the states to the states hashmap and linking it to the relative state 
+        //Adding the states to the states hashmap and linking it to the relative state
         states.put("WaitingForRequest", new WaitingForRequest());
         states.put("AddingRequest", new AddingRequest());
         states.put("AssigningAction", new AssigningAction());
@@ -196,7 +196,7 @@ public class Scheduler {
         }
         return scheduler;
     }
-    
+
     public List<ElevatorCall> getRequestsQueue() {
         return requestsQueue;
     }
@@ -224,7 +224,7 @@ public class Scheduler {
 
     /**
      * Adding the request for the elevator call given to the suitable queue
-     * 
+     *
      * @param elevatorCall: elevator request to be added
      */
     public synchronized void addRequest(ElevatorCall elevatorCall){
@@ -235,9 +235,9 @@ public class Scheduler {
             System.out.println("Attempted to add a null ElevatorCall to the queue.");
             return;
         }
-    
-        //Delegate the task to the corresponding state 
-        currentState.addRequest(this, elevatorCall);  
+
+        //Delegate the task to the corresponding state
+        currentState.addRequest(this, elevatorCall);
     }
 
     public void signalRequestsComplete() {
@@ -247,12 +247,12 @@ public class Scheduler {
     /**
      * to be used by the Elevator Subsystem to notify the scheduler that it reached a floor,
      * so that scheduler provide the elevator car with the next elevator action
-     * 
+     *
      * @param elevatorId: elevator identification
      * @param currentFloor: the current floor that the elevator in.
      */
     public synchronized ElevatorSubsystem.Action getNextAction(int elevatorId, int currentFloor) {
-        //Delegate the task to the corresponding state 
+        //Delegate the task to the corresponding state
         return currentState.getNextAction(this, elevatorId, currentFloor);
     }
 
@@ -341,7 +341,7 @@ public class Scheduler {
 
         try {
             elevatorSendReceiveSocket = new DatagramSocket(69);
-            //timeout if no calls received for one minute 
+            //timeout if no calls received for one minute
             elevatorSendReceiveSocket.setSoTimeout(60000);
             byte[] receiveData = new byte[Integer.BYTES * 2];
 
@@ -410,10 +410,10 @@ public class Scheduler {
     private void listenToFloorSubsystemRequests() {
         try {
                 floorSendReceiveSocket = new DatagramSocket(23);
-                //timeout if no calls received for two minute 
+                //timeout if no calls received for two minute
                 floorSendReceiveSocket.setSoTimeout(120000);
                 byte[] receiveData = new byte[Integer.BYTES * 10];
-                
+
                 while (true) {
                     try{
                     DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
@@ -442,7 +442,7 @@ public class Scheduler {
                     floorSendReceiveSocket.setSoTimeout(120000);
                 }
                 catch (SocketTimeoutException e) {
-                //signal that no more requests available 
+                //signal that no more requests available
                 this.signalRequestsComplete();
                 break;
                 }

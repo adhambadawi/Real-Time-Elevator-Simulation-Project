@@ -19,16 +19,14 @@ public class ElevatorSubsystem{
     private DatagramPacket sendPacket, receivePacket; // packets to be sent and received using UDP
     private DatagramSocket sendReceiveSocket; // the socket used to send and receive the packets
     private Map<Integer, ElevatorCar> elevatorCars; //list of register elevator cars
-    private List<ElevatorSubsystemGui> views;
     /**
      * Constructor for ElevatorSubsystem thread
      * Does not need instantiation of anScheduler object, instead send data
-     * throw UDP packets 
+     * throw UDP packets
      */
     public ElevatorSubsystem() {
         //Synchronized to enure thread safety in case two elevator cars were getting registered at the same time
         this.elevatorCars = Collections.synchronizedMap(new HashMap<>());
-        views = new ArrayList<>();
     }
 
     /**
