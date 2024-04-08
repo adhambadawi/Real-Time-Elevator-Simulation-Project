@@ -3,6 +3,7 @@ import java.awt.*;
 
 public class ElevatorSubsystemGui extends JFrame {
     JButton[][] cells;
+    private int runningElevators;
     public ElevatorSubsystemGui(int numElevators, int numFloors) {
         super("Elevator Subsystem");
         this.setLayout(new GridLayout(numFloors + 1, numElevators));
@@ -24,6 +25,8 @@ public class ElevatorSubsystemGui extends JFrame {
                 this.add(button);
             }
         }
+
+        runningElevators = numElevators;
 
         this.setVisible(true);
     }
@@ -51,15 +54,12 @@ public class ElevatorSubsystemGui extends JFrame {
         }
     }
 
-    public void handleElevatorDoorFault(int elevatorCarID) {
-
-    }
-
-    public void handleElevatorArrivalFault(int elevatorCarID) {
-
-    }
-
     public void handleElevatorRemoval(int elevatorCarID) {
         cells[0][elevatorCarID].setText("Out of service");
+        runningElevators -= 1;
+        if (runningElevators == 0) {
+            JOptionPane.showMessageDialog(this, "All elevators are out of service. GUI will now be closed.");
+            this.dispose();
+        }
     }
 }
