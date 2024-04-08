@@ -152,6 +152,7 @@ public class Scheduler {
     private Map<Integer, ElevatorCall> activeTrips;
     private DatagramSocket elevatorSendReceiveSocket, floorSendReceiveSocket, floorSendSocket;
     private Set<Integer> disabledElevatorCars = Collections.synchronizedSet(new HashSet<>());
+    private int elevatorMoves = 0;
 
 
 
@@ -371,9 +372,11 @@ public class Scheduler {
                     switch (action) {
                         case UP:
                             direction = 1;
+                            elevatorMoves++;
                             break;
                         case DOWN:
                             direction = -1;
+                            elevatorMoves++;
                             break;
                     }
 
@@ -400,6 +403,8 @@ public class Scheduler {
                 elevatorSendReceiveSocket.close();
                 executor.shutdown();
             }
+
+            System.out.println("Total elevator moves: " + elevatorMoves);
         }
     }
 
