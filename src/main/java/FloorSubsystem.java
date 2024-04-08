@@ -47,6 +47,7 @@ public class FloorSubsystem implements Runnable {
             reader = new BufferedReader(new FileReader(inputFilepath));
             String line;
             Date firstTimestamp = null;
+            Date executionStart = new Date();
 
             while ((line = reader.readLine()) != null) {
                 String[] elevatorCallInfo = ElevatorCall.fromString(line);
@@ -62,9 +63,12 @@ public class FloorSubsystem implements Runnable {
                     firstTimestamp = timestamp;
                 } else {
 
-                    long timeDifference = timestamp.getTime() - firstTimestamp.getTime();
-                    // Use the calculated difference to simulate time between requests
-                    Thread.sleep(timeDifference);
+                    long expectedTimeDifference = timestamp.getTime() - firstTimestamp.getTime();
+                    long actualTimeDifference = (new Date()).getTime() - executionStart.getTime();
+                    if (expectedTimeDifference > actualTimeDifference) {
+                        // Use the calculated difference to simulate time between requests
+                        Thread.sleep(expectedTimeDifference - actualTimeDifference);
+                    }
                 }
                 sendElevatorCall(elevatorCallInfo);
             }
