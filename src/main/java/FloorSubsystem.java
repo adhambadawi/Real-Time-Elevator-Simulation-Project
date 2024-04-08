@@ -138,7 +138,6 @@ public class FloorSubsystem implements Runnable {
         }
     }
 
-
     /**
      * Update the elevator car display with the current location of an elevator car
      * @param elevatorId elevator car id
