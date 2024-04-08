@@ -153,6 +153,7 @@ public class Scheduler {
     private DatagramSocket elevatorSendReceiveSocket, floorSendReceiveSocket, floorSendSocket;
     private Set<Integer> disabledElevatorCars = Collections.synchronizedSet(new HashSet<>());
     private int elevatorMoves = 0;
+    private Date executionStart;
 
 
 

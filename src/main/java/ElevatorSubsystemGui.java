@@ -1,9 +1,12 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.Date;
 
 public class ElevatorSubsystemGui extends JFrame {
     JButton[][] cells;
     private int runningElevators;
+    private Date executionStart;
+
     public ElevatorSubsystemGui(int numElevators, int numFloors) {
         super("Elevator Subsystem");
         this.setLayout(new GridLayout(numFloors + 1, numElevators));
@@ -27,6 +30,7 @@ public class ElevatorSubsystemGui extends JFrame {
         }
 
         runningElevators = numElevators;
+        executionStart = new Date();
 
         this.setVisible(true);
     }
@@ -58,7 +62,9 @@ public class ElevatorSubsystemGui extends JFrame {
         cells[0][elevatorCarID].setText("Out of service");
         runningElevators -= 1;
         if (runningElevators == 0) {
-            JOptionPane.showMessageDialog(this, "All elevators are out of service. GUI will now be closed.");
+            Date now = new Date();
+            double executionTime = (now.getTime() - executionStart.getTime()) / 1000;
+            JOptionPane.showMessageDialog(this, String.format("All elevators are out of service. GUI will now be closed. Total execution time = %ds", executionTime));
             this.dispose();
         }
     }
