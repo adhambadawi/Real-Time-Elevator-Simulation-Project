@@ -63,8 +63,8 @@ public class ElevatorSubsystemGui extends JFrame {
         runningElevators -= 1;
         if (runningElevators == 0) {
             Date now = new Date();
-            double executionTime = (now.getTime() - executionStart.getTime()) / 1000;
-            JOptionPane.showMessageDialog(this, String.format("All elevators are out of service. GUI will now be closed. Total execution time = %ds", executionTime));
+            double executionTime = (now.getTime() - executionStart.getTime());
+            JOptionPane.showMessageDialog(this, "All elevators are out of service. GUI will now be closed. Total execution time = " + executionTime + " seconds");
             this.dispose();
         }
     }

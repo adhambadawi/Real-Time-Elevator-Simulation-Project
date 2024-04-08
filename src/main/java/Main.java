@@ -8,7 +8,7 @@ public class Main {
         //Elevator and floor threads
         Thread floorThread;
         ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
-        FloorSubsystem floorSubSystem = new FloorSubsystem("ElevatorCalls");
+        FloorSubsystem floorSubSystem = new FloorSubsystem("../../../ElevatorCalls");
         floorThread = new Thread(floorSubSystem);
 
         ElevatorSubsystemGui gui = new ElevatorSubsystemGui(TOTAL_ELEVATOR_CARS, 22);
