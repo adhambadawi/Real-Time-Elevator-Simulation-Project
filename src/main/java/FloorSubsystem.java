@@ -45,14 +45,14 @@ public class FloorSubsystem implements Runnable {
         BufferedReader reader;
         try {
             reader = new BufferedReader(new FileReader(inputFilepath));
-            String line;
+            String line = reader.readLine();
             Date firstTimestamp = null;
             Date executionStart = new Date();
 
             while ((line = reader.readLine()) != null) {
                 String[] elevatorCallInfo = ElevatorCall.fromString(line);
 //                System.out.println("[FLOOR SUBSYSTEM] Processing new elevator call: " + elevatorCall);
-                SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+                SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:SS");
                 Date timestamp;
                 try {
                    timestamp = dateFormat.parse(elevatorCallInfo[0]);
@@ -89,7 +89,7 @@ public class FloorSubsystem implements Runnable {
         try {
             ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
 
-            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss:SS");
             Date timestamp;
             try {
                 timestamp = sdf.parse(elevatorCallInfo[0]);
@@ -110,7 +110,7 @@ public class FloorSubsystem implements Runnable {
             byteBuffer.putInt(seconds);
             byteBuffer.putInt(Integer.parseInt(elevatorCallInfo[1])); //starting floor
             byteBuffer.putInt(Integer.parseInt(elevatorCallInfo[2])); // Target floor
-            byteBuffer.putInt(elevatorCallInfo[3].equals("Up") ? 1 : 2); //Direction
+            byteBuffer.putInt(elevatorCallInfo[3].equals("up") ? 1 : 2); //Direction
 
             byte[] sendData = byteBuffer.array();
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getLocalHost(), 23);

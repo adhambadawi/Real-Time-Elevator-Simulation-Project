@@ -6,6 +6,7 @@ public class ElevatorSubsystemGui extends JFrame {
     JButton[][] cells;
     private int runningElevators;
     private Date executionStart;
+    private int elevatorMoves;
 
     public ElevatorSubsystemGui(int numElevators, int numFloors) {
         super("Elevator Subsystem");
@@ -37,6 +38,7 @@ public class ElevatorSubsystemGui extends JFrame {
 
     public void handleElevatorPositionUpdate(int elevatorCarID, int currentFloor) {
         cells[0][elevatorCarID].setText(Integer.toString(currentFloor));
+        elevatorMoves++;
     }
 
     public void handleElevatorDoorOpen(int elevatorCarID, int currentFloor) {
@@ -63,8 +65,8 @@ public class ElevatorSubsystemGui extends JFrame {
         runningElevators -= 1;
         if (runningElevators == 0) {
             Date now = new Date();
-            double executionTime = (now.getTime() - executionStart.getTime());
-            JOptionPane.showMessageDialog(this, "All elevators are out of service. GUI will now be closed. Total execution time = " + executionTime + " seconds");
+            double executionTime = (now.getTime() - executionStart.getTime()) / 1000;
+            JOptionPane.showMessageDialog(this, "All elevators are out of service. GUI will now be closed. Total execution time = " + executionTime + " seconds. Total elevator moves = " + elevatorMoves);
             this.dispose();
         }
     }
