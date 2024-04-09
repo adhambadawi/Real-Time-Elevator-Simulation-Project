@@ -1,8 +1,13 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.Date;
 
 public class ElevatorSubsystemGui extends JFrame {
     JButton[][] cells;
+    private int runningElevators;
+    private Date executionStart;
+    private int elevatorMoves;
+
     public ElevatorSubsystemGui(int numElevators, int numFloors) {
         super("Elevator Subsystem");
         this.setLayout(new GridLayout(numFloors + 1, numElevators));
@@ -25,11 +30,15 @@ public class ElevatorSubsystemGui extends JFrame {
             }
         }
 
+        runningElevators = numElevators;
+        executionStart = new Date();
+
         this.setVisible(true);
     }
 
     public void handleElevatorPositionUpdate(int elevatorCarID, int currentFloor) {
         cells[0][elevatorCarID].setText(Integer.toString(currentFloor));
+        elevatorMoves++;
     }
 
     public void handleElevatorDoorOpen(int elevatorCarID, int currentFloor) {
@@ -51,15 +60,14 @@ public class ElevatorSubsystemGui extends JFrame {
         }
     }
 
-    public void handleElevatorDoorFault(int elevatorCarID) {
-
-    }
-
-    public void handleElevatorArrivalFault(int elevatorCarID) {
-
-    }
-
     public void handleElevatorRemoval(int elevatorCarID) {
         cells[0][elevatorCarID].setText("Out of service");
+        runningElevators -= 1;
+        if (runningElevators == 0) {
+            Date now = new Date();
+            double executionTime = (now.getTime() - executionStart.getTime()) / 1000;
+            JOptionPane.showMessageDialog(this, "All elevators are out of service. GUI will now be closed. Total execution time = " + executionTime + " seconds. Total elevator moves = " + elevatorMoves);
+            this.dispose();
+        }
     }
 }

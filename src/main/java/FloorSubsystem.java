@@ -40,59 +40,46 @@ public class FloorSubsystem implements Runnable {
         listenToSchedulerForDisplay();
     }
 
-
     @Override
     public void run() {
         BufferedReader reader;
         try {
             reader = new BufferedReader(new FileReader(inputFilepath));
-            String line;
-            SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+            String line = reader.readLine();
             Date firstTimestamp = null;
-            Date timestamp;
+            Date executionStart = new Date();
 
             while ((line = reader.readLine()) != null) {
-                String[] elevatorCallInfo = line.split(" "); // Assuming the format is "HH:mm:ss floor direction targetFloor"
+                String[] elevatorCallInfo = ElevatorCall.fromString(line);
+//                System.out.println("[FLOOR SUBSYSTEM] Processing new elevator call: " + elevatorCall);
+                SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:SS");
+                Date timestamp;
                 try {
-                    timestamp = dateFormat.parse(elevatorCallInfo[0]);
-                    if (firstTimestamp == null) {
-                        firstTimestamp = timestamp;
-                    } else {
-                        long timeDifference = timestamp.getTime() - firstTimestamp.getTime();
-                        Thread.sleep(timeDifference);
-                    }
-                    sendElevatorCall(elevatorCallInfo);
+                   timestamp = dateFormat.parse(elevatorCallInfo[0]);
                 } catch (ParseException e) {
-                    System.err.println("Error parsing the elevator call timestamp: " + e.getMessage());
+                    throw new RuntimeException(e);
                 }
+                if (firstTimestamp == null) {
+                    firstTimestamp = timestamp;
+                } else {
+
+                    long expectedTimeDifference = timestamp.getTime() - firstTimestamp.getTime();
+                    long actualTimeDifference = (new Date()).getTime() - executionStart.getTime();
+                    if (expectedTimeDifference > actualTimeDifference) {
+                        // Use the calculated difference to simulate time between requests
+                        Thread.sleep(expectedTimeDifference - actualTimeDifference);
+                    }
+                }
+                sendElevatorCall(elevatorCallInfo);
             }
-            signalCompletion(); // Signal that all elevator calls have been sent
         } catch (IOException | InterruptedException e) {
-            System.err.println("Error reading from input file or during processing: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             if (sendReceiveSocket != null && !sendReceiveSocket.isClosed()) {
-                signalCompletion();
                 sendReceiveSocket.close();
-
             }
         }
     }
-
-    /**
-     * Signal that all calls from the input file have been processed and no more are coming.
-     */
-    private void signalCompletion() {
-        // Implementation can vary based on overall system architecture
-        // For example, send a specific message to the scheduler or set a boolean flag
-        try {
-            byte[] endSignal = "END_OF_CALLS".getBytes();
-            DatagramPacket endPacket = new DatagramPacket(endSignal, endSignal.length, InetAddress.getLocalHost(), 23);
-            sendReceiveSocket.send(endPacket);
-        } catch (IOException e) {
-            System.err.println("Failed to send completion signal: " + e.getMessage());
-        }
-    }
-
 
     /**
      * creates the message based on elevator calls and sends the packet to port 23
@@ -102,7 +89,7 @@ public class FloorSubsystem implements Runnable {
         try {
             ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
 
-            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss:SS");
             Date timestamp;
             try {
                 timestamp = sdf.parse(elevatorCallInfo[0]);
@@ -122,9 +109,8 @@ public class FloorSubsystem implements Runnable {
             byteBuffer.putInt(minutes);
             byteBuffer.putInt(seconds);
             byteBuffer.putInt(Integer.parseInt(elevatorCallInfo[1])); //starting floor
-            byteBuffer.putInt(Integer.parseInt(elevatorCallInfo[3])); // Target floor
-            // Convert direction to a numeric code
-            byteBuffer.putInt("Up".equals(elevatorCallInfo[2]) ? 1 : 2); //Direction, assuming 1 for Up, 2 for Down
+            byteBuffer.putInt(Integer.parseInt(elevatorCallInfo[2])); // Target floor
+            byteBuffer.putInt(elevatorCallInfo[3].equals("up") ? 1 : 2); //Direction
 
             byte[] sendData = byteBuffer.array();
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getLocalHost(), 23);

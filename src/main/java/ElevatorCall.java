@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
  * @version 3.00
  */
 public class ElevatorCall {
-    private static final String REGEX_PATTERN = "([0-9]{2}:[0-9]{2}:[0-9]{2} \\d+ \\w+ \\d+)";
+    private static final String REGEX_PATTERN = "(\\d{2}):(\\d{2}):(\\d{2}):(\\d{2}) (\\d+) (up|down) (\\d+)";
 
     private final Date timestamp;
     private final int startingFloor;
@@ -24,6 +24,7 @@ public class ElevatorCall {
 
     private int passengersTotalWeight;
     private static final int ELEVATOR_WEIGHT_LIMIT = 550;
+    private boolean tripStarted;
 
     /**
      * Construct a new ElevatorCall object
@@ -40,6 +41,7 @@ public class ElevatorCall {
         this.passengersTotalWeight = new Passenger().getPassengerWeight();
 
         currentFloor = null;
+        tripStarted = false;
 
         targetFloors = new ArrayList<>();
         targetFloors.add(startingFloor);
@@ -71,7 +73,7 @@ public class ElevatorCall {
 
     public void setCurrentFloor(Integer currentFloor) {
         this.currentFloor = currentFloor;
-        if (currentFloor == getNextTargetFloor()) {
+        if (tripStarted && currentFloor == getNextTargetFloor()) {
             targetFloors.remove(0);
         }
     }
@@ -166,10 +168,6 @@ public class ElevatorCall {
      * Construct a new ElevatorCall object using a string representation
      * @param repr
      */
-    /**
-     * Construct a new ElevatorCall object using a string representation
-     * @param repr
-     */
     public static String[] fromString(String repr) {
         Pattern pattern = Pattern.compile(REGEX_PATTERN);
         Matcher matcher = pattern.matcher(repr);
@@ -182,16 +180,21 @@ public class ElevatorCall {
         // Verify that the input line matches the defined regex expression
         if (matcher.matches()) {
             // Parse timestamp, starting floor, direction, and target floor
-            timestamp = matcher.group(1).split(" ")[0];
-            startingFloor = matcher.group(1).split(" ")[1];
-            direction = matcher.group(1).split(" ")[2];
-            targetFloor = matcher.group(1).split(" ")[3];
+            timestamp = matcher.group(1) + ":" + matcher.group(2) + ":" + matcher.group(3) + ":" + matcher.group(4);
+            startingFloor = matcher.group(5);
+            direction = matcher.group(6);
+            targetFloor = matcher.group(7);
 
         } else {
-            throw new RuntimeException("ElevatorCall string representation does not align with required format.");
+            System.out.println(repr);
+            throw new RuntimeException("ElevatorCall string representation does not align with required format." + repr);
         }
         String[] parsedElevatorCallInfo = {timestamp, startingFloor, targetFloor, direction};
         return parsedElevatorCallInfo;
+    }
+
+    public void setTripStarted() {
+        tripStarted = true;
     }
 
 

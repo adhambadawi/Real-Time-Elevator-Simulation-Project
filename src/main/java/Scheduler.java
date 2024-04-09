@@ -30,7 +30,7 @@ interface SchedulerState {
         context.setState("AddingRequest");
 
         if (elevatorCall == null) {
-            System.out.println("Attempted to add a null ElevatorCall to the queue.");
+            //System.out.println("Attempted to add a null ElevatorCall to the queue.");
             return;
         }
         
@@ -38,8 +38,6 @@ interface SchedulerState {
             System.out.println(elevatorCallIterator);
             if (elevatorCall != null && elevatorCallIterator.mergeRequest(elevatorCall)) {
                 return; // Request merged, no need to add to the queue
-            } else {
-                System.out.println("Attempted to merge a null ElevatorCall");
             }
         }
 
@@ -64,7 +62,9 @@ interface SchedulerState {
         context.setState("AssigningAction");
         context.getElevatorCarPositions().put(elevatorId, currentFloor);
 
-        if ((context.getActiveTrips().get(elevatorId) == null || context.getActiveTrips().get(elevatorId).getNextTargetFloor() == null) && !context.assignTrip(elevatorId)) {
+        boolean activeTrip = context.getActiveTrips().get(elevatorId) != null && context.getActiveTrips().get(elevatorId).getNextTargetFloor() != null;
+
+        if (!activeTrip && !context.assignTrip(elevatorId)) {
             //retrieving the original state for the Scheduler: WaitingForRequest state (IDLE)
             //trigging event (assigned action)
             context.setState("WaitingForRequest");
@@ -83,6 +83,7 @@ interface SchedulerState {
 
         if (currentFloor == prevTargetFloor) {
             action = ElevatorSubsystem.Action.TOGGLE_DOORS;
+            trip.setTripStarted();
         } else if (currentFloor < trip.getNextTargetFloor()) {
             action = ElevatorSubsystem.Action.UP;
         } else {
@@ -152,6 +153,8 @@ public class Scheduler {
     private Map<Integer, ElevatorCall> activeTrips;
     private DatagramSocket elevatorSendReceiveSocket, floorSendReceiveSocket, floorSendSocket;
     private Set<Integer> disabledElevatorCars = Collections.synchronizedSet(new HashSet<>());
+    private int elevatorMoves = 0;
+    private Date executionStart;
 
 
 
@@ -232,7 +235,7 @@ public class Scheduler {
         System.out.println(String.format("[SCHEDULER] Received new elevator call: \n%s", elevatorCall));
 
         if (elevatorCall == null) {
-            System.out.println("Attempted to add a null ElevatorCall to the queue.");
+            //System.out.println("Attempted to add a null ElevatorCall to the queue.");
             return;
         }
 
@@ -371,9 +374,11 @@ public class Scheduler {
                     switch (action) {
                         case UP:
                             direction = 1;
+                            elevatorMoves++;
                             break;
                         case DOWN:
                             direction = -1;
+                            elevatorMoves++;
                             break;
                     }
 
@@ -400,6 +405,8 @@ public class Scheduler {
                 elevatorSendReceiveSocket.close();
                 executor.shutdown();
             }
+
+            System.out.println("Total elevator moves: " + elevatorMoves);
         }
     }
 
